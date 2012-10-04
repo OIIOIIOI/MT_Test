@@ -5,9 +5,9 @@
     <movie outputType="Application" />
     <movie input="" />
     <movie path="bin\MTTest.swf" />
-    <movie fps="30" />
-    <movie width="800" />
-    <movie height="600" />
+    <movie fps="60" />
+    <movie width="798" />
+    <movie height="480" />
     <movie version="10" />
     <movie minorVersion="1" />
     <movie platform="Flash Player" />
@@ -21,17 +21,17 @@
   <build>
     <option directives="" />
     <option flashStrict="False" />
-    <option mainClass="Main" />
+    <option mainClass="com.m.mttest.Main" />
     <option enabledebug="True" />
-    <option additional="" />
+    <option additional="-resource res/tiles.json@tilesJson&#xA;-resource res/levels.json@levelsJson" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>
-    <!-- example: <library name="..." /> -->
+    <library name="polygonal" />
   </haxelib>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
-    <compile path="src\Main.hx" />
+    <compile path="src\com\m\mttest\Main.hx" />
   </compileTargets>
   <!-- Assets to embed into the output SWF -->
   <library>
