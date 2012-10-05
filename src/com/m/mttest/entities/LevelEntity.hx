@@ -7,6 +7,7 @@ import com.m.mttest.entities.BasicBlock;
 import com.m.mttest.entities.Bomb;
 import com.m.mttest.entities.Sheep;
 import com.m.mttest.entities.Wall;
+import com.m.mttest.entities.Rock;
 import com.m.mttest.levels.Level;
 
 /**
@@ -43,71 +44,81 @@ class LevelEntity extends Entity
 		active = false;
 	}
 	
+	override public function clickHandler () :Void {
+		level.entityClickHandler(this);
+		trace("clicked " + this + " (" + type + ")");
+	}
+	
 	public function activate () :Void {
 		active = true;
 	}
 	
-	public function blowUp () :Void {
+	public function blowUp (_power:Int = 1) :Void {
 		level.updateMap();
 	}
 	
 	private function getWalkable () :Bool {
 		return switch (type) {
-			case unbreakable_wall: false;
-			case floor, sheep, exit, blast: true;
+			case unbreakable_wall, hole: false;
+			case floor, sheep, exit, blast, blocked: true;
 			case bomb: (level.absoluteSearch || cast(this, Bomb).state == BombState.gone);
 			case wall: (level.absoluteSearch || cast(this, Wall).state == WallState.gone);
+			case rock: (level.absoluteSearch || cast(this, Rock).state == RockState.gone);
 		}
 	}
 	
 	public function stopsBlast () :Bool {
 		return switch (type) {
 			case unbreakable_wall: true;
-			case floor, exit, blast, sheep: false;
+			case floor, exit, blast, sheep, hole, blocked: false;
 			case bomb: (cast(this, Bomb).state != BombState.gone);
 			case wall: (cast(this, Wall).state != WallState.gone);
+			case rock: (cast(this, Rock).state != RockState.gone);
 		}
 	}
 	
 	private function getDestructible () :Bool {
 		return switch (type) {
-			case unbreakable_wall: false;
-			case floor: false;
-			case bomb: true;
-			case sheep: true;
-			case exit: false;
+			case unbreakable_wall, hole, floor, exit, blast, blocked: false;
+			case bomb, sheep: true;
 			case wall: (cast(this, Wall).state != WallState.gone);
-			case blast: false;
+			case rock: (cast(this, Rock).state != RockState.gone);
 		}
 	}
 	
 	static public function typeToClass (_type:LEType) :String {
 		return switch (_type) {
 			case unbreakable_wall:	"com.m.mttest.entities.BasicBlock";
+			case hole:				"com.m.mttest.entities.BasicBlock";
 			case floor:				"com.m.mttest.entities.BasicBlock";
+			case blocked:			"com.m.mttest.entities.BasicBlock";
 			case bomb:				"com.m.mttest.entities.Bomb";
 			case sheep:				"com.m.mttest.entities.Sheep";
 			case exit:				"com.m.mttest.entities.BasicBlock";
 			case wall:				"com.m.mttest.entities.Wall";
+			case rock:				"com.m.mttest.entities.Rock";
 			case blast:				"com.m.mttest.entities.Blast";
 		}
 	}
 	
 	static public function getConstructorParams (_type:LEType) :Array<Dynamic> {
 		return switch (_type) {
-			case bomb, sheep, wall, blast:			[];
-			case unbreakable_wall, floor, exit:	[_type];
+			case bomb, sheep, wall, rock, blast:						[];
+			case unbreakable_wall, floor, exit, hole, blocked:	[_type];
 		}
 	}
 	
 	static public function typeToColor (_type:LEType) :UInt {
 		return switch (_type) {
 			case unbreakable_wall:	0xFF00FF;
+			case hole:				0xCC00CC;
+			case blocked:			0x990099;
 			case floor:				0x999999;
 			case bomb:				0xFF0000;
 			case sheep:				0xFFCC00;
 			case exit:				0x00FF00;
-			case wall:				0x333333;
+			case wall:				0x666666;
+			case rock:				0x333333;
 			case blast:				0xFFFF00;
 			
 		}
@@ -119,9 +130,12 @@ class LevelEntity extends Entity
 			case 0xFF0000:	bomb;
 			case 0xFFCC00:	sheep;
 			case 0x00FF00:	exit;
-			case 0x333333:	wall;
+			case 0x666666:	wall;
+			case 0x333333:	rock;
 			case 0xFFFF00:	blast;
 			case 0xFF00FF:	unbreakable_wall;
+			case 0xCC00CC:	hole;
+			case 0x990099:	blocked;
 			default:		null;
 		}
 	}
@@ -130,10 +144,13 @@ class LevelEntity extends Entity
 
 enum LEType {
 	unbreakable_wall;
+	hole;
+	blocked;
 	floor;
 	sheep;
 	exit;
 	wall;
+	rock;
 	bomb;
 	blast;
 }

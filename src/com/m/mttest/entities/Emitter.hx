@@ -18,6 +18,7 @@ class Emitter extends Entity
 		var _array:Array<Particle> = switch (_type) {
 			case "straw":	getStrawExplosion();
 			case "wool":	getWoolExplosion();
+			case "rock":	getRockExplosion();
 			default:		getBombExplosion();
 		}
 		for (_p in _array) {
@@ -61,7 +62,20 @@ class Emitter extends Entity
 		var _color:UInt;
 		for (_i in 0...24) {
 			_color = 0xFF000000 + ColorManager.getHexFromHSL(208, 0.25, Math.random() * 0.25 + 0.75);
-			_p = new Particle(_color, Std.random(1) + 2, Std.random(1) + 2);
+			_p = new Particle(_color, 2, 2);
+			_p.addFX(new AdvancedFadeFX(_p.life, [new ColorTransform(), new ColorTransform(1, 1, 1, 0)]));
+			_array.push(_p);
+		}
+		return _array;
+	}
+	
+	static public function getRockExplosion () :Array<Particle> {
+		var _array:Array<Particle> = new Array<Particle>();
+		var _p:Particle;
+		var _color:UInt;
+		for (_i in 0...10) {
+			_color = 0xFF000000 + ColorManager.getHexFromHSL(230, 0.25, Math.random() * 0.25 + 0.75);
+			_p = new Particle(_color, 1, 1);
 			_p.addFX(new AdvancedFadeFX(_p.life, [new ColorTransform(), new ColorTransform(1, 1, 1, 0)]));
 			_array.push(_p);
 		}

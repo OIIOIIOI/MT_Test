@@ -5,6 +5,7 @@ import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.Game;
 import com.m.mttest.levels.Level;
+import haxe.Timer;
 import statm.explore.haxeAStar.AStar;
 import statm.explore.haxeAStar.IntPoint;
 
@@ -17,27 +18,36 @@ class Sheep extends LevelEntity
 {
 	
 	static public var IDLE:String = "idle";
+	static public var JUMP:String = "jump";
 	static public var DEAD:String = "dead";
 	
+	public var state (default, null):SheepState;
 	private var path:Array<IntPoint>;
 	private var pathIndex:Int;
 	private var speed:Float;
-	public var state (default, null):SheepState;
+	private var wait:Bool;
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level) {
 		super(_x, _y, _level, LEType.sheep);
 		
+		state = alive;
 		pathIndex = 0;
 		speed = 0.7;
-		state = alive;
+		wait = true;
+		
 		var _anim:Animation;
 		_anim = new Animation(IDLE, "tiles");
 		_anim.addFrame(new AnimFrame("sheep0"));
 		_anim.addFrame(new AnimFrame("sheep1"));
 		_anim.fps = 8;
 		anims.push(_anim);
+		_anim = new Animation(JUMP, "tiles");
+		_anim.addFrame(new AnimFrame("sheep_jump"));
+		_anim.addFrame(new AnimFrame("sheep0"));
+		_anim.addFrame(new AnimFrame("sheep1"));
+		_anim.fps = 8;
+		anims.push(_anim);
 		_anim = new Animation(DEAD, "tiles");
-		//_anim.addFrame(new AnimFrame("sheep_naked0"));
 		_anim.addFrame(new AnimFrame("sheep_cry0"));
 		_anim.addFrame(new AnimFrame("sheep_cry1"));
 		_anim.addFrame(new AnimFrame("sheep_cry2"));
@@ -45,16 +55,24 @@ class Sheep extends LevelEntity
 		_anim.addFrame(new AnimFrame("sheep_cry4"));
 		_anim.fps = 18;
 		anims.push(_anim);
+		
 		play(IDLE);
 	}
 	
 	override public function update () :Void {
 		super.update();
-		if (!active)	return;
+		if (!active)
+			return;
 		// Search for a path
-		if (path == null)	path = findPath();
+		if (path == null) {
+			path = findPath();
+			if (path != null) {
+				play(JUMP);
+				Timer.delay(function () { if (active) { wait = false; play(IDLE); } }, 1000);
+			}
+		}
 		// If a path was found, move on
-		if (path != null && pathIndex + 1 < path.length) {
+		if (!wait && path != null && pathIndex + 1 < path.length) {
 			var _dX:Int = path[pathIndex + 1].x * Game.TILE_SIZE;
 			var _dY:Int = path[pathIndex + 1].y * Game.TILE_SIZE;
 			var _xDone:Bool = false;
@@ -80,22 +98,16 @@ class Sheep extends LevelEntity
 			// Check and adjust positions
 			if (_xDone) {
 				pathIndex++;
-				if (pathIndex + 1 == path.length || _dX == path[pathIndex + 1].x * Game.TILE_SIZE) {
+				if (pathIndex + 1 == path.length || _dX == path[pathIndex + 1].x * Game.TILE_SIZE)
 					x = _dX;
-				}
 			}
 			else if (_yDone) {
 				pathIndex++;
-				if (pathIndex + 1 == path.length || _dY == path[pathIndex + 1].y * Game.TILE_SIZE) {
+				if (pathIndex + 1 == path.length || _dY == path[pathIndex + 1].y * Game.TILE_SIZE)
 					y = _dY;
-				}
 			}
 			mapX = Math.floor(x / Game.TILE_SIZE);
 			mapY = Math.floor(y / Game.TILE_SIZE);
-			
-			/*if (pathIndex + 1 == path.length) {
-				trace("done");
-			}*/
 		}
 	}
 	
@@ -103,7 +115,7 @@ class Sheep extends LevelEntity
 		return AStar.getAStarInstance(level).findPath(new IntPoint(mapX, mapY), level.exitPos);
 	}
 	
-	override public function blowUp () :Void {
+	override public function blowUp (_power:Int = 1) :Void {
 		if (state == SheepState.alive) {
 			//trace("blowUp");
 			state = SheepState.dead;
@@ -111,7 +123,7 @@ class Sheep extends LevelEntity
 			play(DEAD);
 			level.addChild(new Emitter(x + width / 2, y + height / 2, "wool"));
 		}
-		super.blowUp();
+		super.blowUp(_power);
 	}
 	
 }

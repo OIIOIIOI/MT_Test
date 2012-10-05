@@ -41,7 +41,7 @@ class Level extends Entity, implements IAStarClient
 	public var absoluteSearch:Bool;
 	//
 	private var blasts:Hash<String>;
-	private var blownUpTiles:Hash <Bool>;
+	private var blownUpTiles:Array<BlowUpInfo>;
 	private var active:Bool;
 	
 	public function new () {
@@ -60,7 +60,7 @@ class Level extends Entity, implements IAStarClient
 		addChild(blastsLayer);
 		//
 		blasts = new Hash<String>();
-		blownUpTiles = new Hash<Bool>();
+		blownUpTiles = new Array<BlowUpInfo>();
 		active = false;
 	}
 	
@@ -86,14 +86,14 @@ class Level extends Entity, implements IAStarClient
 			return;
 		}
 		// Turn destructible tiles off
-		absoluteSearch = true;
+		/*absoluteSearch = true;
 		updateMap();
 		// Search for a path to the exit for each sheep
 		for (_s in sheepLayer.children) {
 			if (cast(_s, Sheep).findPath() == null) {
 				trace("No available path to the exit was found for " + _s);
 			}
-		}
+		}*/
 		// Turn destructible tiles back on
 		absoluteSearch = false;
 		updateMap();
@@ -140,14 +140,20 @@ class Level extends Entity, implements IAStarClient
 	}
 	
 	public function addEntity (_entity:LevelEntity) :Void {
-		if (_entity.type == sheep)		sheepLayer.addChild(_entity);
-		else if (_entity.type == bomb)	itemsLayer.addChild(_entity);
-		else if (_entity.type == blast)	blastsLayer.addChild(_entity);
-		else {
-			sceneLayer.addChild(_entity);
-			data[_entity.mapY][_entity.mapX].push(_entity);
+		switch (_entity.type) {
+			case LEType.sheep:
+				sheepLayer.addChild(_entity);
+			case LEType.bomb:
+				itemsLayer.addChild(_entity);
+				updateMap();
+			case LEType.blast:
+				blastsLayer.addChild(_entity);
+			default:
+				sceneLayer.addChild(_entity);
+				data[_entity.mapY][_entity.mapX].push(_entity);
 		}
-		if (_entity.type == exit)		exitPos = new IntPoint(_entity.mapX, _entity.mapY);
+		if (_entity.type == exit)
+			exitPos = new IntPoint(_entity.mapX, _entity.mapY);
 	}
 	
 	public function activate () :Void {
@@ -166,28 +172,24 @@ class Level extends Entity, implements IAStarClient
 		}
 	}
 	
-	public function click (_point:Point) :Void {
-		var _targets:Array<LevelEntity> = getEntitiesAtPoint(_point);
-		if (_targets.length > 0) {
-			var _target:LevelEntity = _targets.pop();
-			//trace("upper entity clicked: " + _target.type);
-			if (_target.type == LEType.floor)
-				addEntity(new Bomb(_target.mapX, _target.mapY, this, 1));
-		}
+	public function entityClickHandler (_target:LevelEntity) :Void {
+		if (_target.type == LEType.floor)
+			addEntity(new Bomb(_target.mapX, _target.mapY, this, Std.random(2)));
 	}
 	
 	private function getEntitiesAtPoint (_point:Point) :Array<LevelEntity> {
+		//trace("getEntitiesAtPoint @ " + _point.x + ";" + _point.y);
 		var _targets:Array<LevelEntity> = new Array<LevelEntity>();
 		for (_e in sceneLayer.children) {
-			if (_e.hitTestPoint(new Point(_point.x - absX, _point.y - absY)))
+			if (_e.hitTestPoint(new Point(_point.x, _point.y), false))
 				_targets.push(cast(_e, LevelEntity));
 		}
 		for (_e in itemsLayer.children) {
-			if (_e.hitTestPoint(new Point(_point.x - absX, _point.y - absY)))
+			if (_e.hitTestPoint(new Point(_point.x, _point.y), false))
 				_targets.push(cast(_e, LevelEntity));
 		}
 		for (_e in sheepLayer.children) {
-			if (_e.hitTestPoint(new Point(_point.x - absX, _point.y - absY)))
+			if (_e.hitTestPoint(new Point(_point.x, _point.y), false))
 				_targets.push(cast(_e, LevelEntity));
 		}
 		return _targets;
@@ -198,7 +200,9 @@ class Level extends Entity, implements IAStarClient
 	}
 	
 	public function isWalkable (_x:Int, _y:Int) :Bool {
-		var _entities:Array<LevelEntity> = data[_y][_x];
+		//trace("isWalkable @ " + _x + ";" + _y);
+		var _entities:Array<LevelEntity> = getEntitiesAtPoint(new Point(_x * Game.TILE_SIZE, _y * Game.TILE_SIZE));
+		//trace("\t" + _entities);
 		for (_e in _entities) {
 			if (!_e.walkable)
 				return false;
@@ -207,22 +211,17 @@ class Level extends Entity, implements IAStarClient
 	}
 	
 	override public function update () :Void {
-		// Update
-		super.update();
+		//trace("--------------------------------------- update");
 		// If tiles need to be blown up, BLOW THEM UP!
-		if (Lambda.count(blownUpTiles) > 0) {
-			var _point:Array<String>;
-			for (_k in blownUpTiles.keys()) {
-				_point = _k.split(";");
-				blowTileUp(Std.parseInt(_point[0]), Std.parseInt(_point[1]));
-			}
-			blownUpTiles = new Hash<Bool>();
+		var _temp:Array<BlowUpInfo> = blownUpTiles.splice(0, blownUpTiles.length);
+		while (_temp.length > 0) {
+			var _point:BlowUpInfo = _temp.shift();
+			blowTileUp(_point);
 		}
 		// If blasts occured, add the entities
-		if (Lambda.count(blasts) > 0)
+		if (Lambda.count(blasts) > 0) {
 			addBlasts();
-		//trace(blastsLayer.numChildren);
-		
+		}
 		// Check for collisions
 		var _sheep:Sheep;
 		for (_s in sheepLayer.children) {
@@ -236,21 +235,24 @@ class Level extends Entity, implements IAStarClient
 				}
 			}
 		}
+		// Update
+		super.update();
 	}
 	
-	private function blowTileUp (_x:Int, _y:Int) :Void {
-		//var _entities:Array<LevelEntity> = data[_y][_x];
-		var _entities:Array<LevelEntity> = getEntitiesAtPoint(new Point(_x * Game.TILE_SIZE, _y * Game.TILE_SIZE));
+	private function blowTileUp (_point:BlowUpInfo) :Void {
+		//trace("blowTileUp @ " + _point.x + ";" + _point.y);
+		var _entities:Array<LevelEntity> = getEntitiesAtPoint(new Point(_point.x * Game.TILE_SIZE, _point.y * Game.TILE_SIZE));
+		//trace("\t" + _entities);
 		for (_e in _entities) {
-			if (_e.destructible)
-				_e.blowUp();
+			if (_e.destructible)	_e.blowUp(_point.p);
 		}
 	}
 	
 	public function blastBomb (_x:Int, _y:Int, _size:Int = 1) :Void {
-		trace("blast bomb @ " + _x + ";" + _y);
+		//trace("blast bomb @ " + _x + ";" + _y);
 		var _tX:Int;
 		var _tY:Int;
+		var _indexOf:Int;
 		var _radius:Int;
 		var _blastPath:Array<LevelEntity> = new Array<LevelEntity>();
 		// Bomb position
@@ -267,8 +269,11 @@ class Level extends Entity, implements IAStarClient
 			_tY++;
 			_radius--;
 		}
-		if (!blownUpTiles.exists(_x + ";" + _tY))
-			blownUpTiles.set(_x + ";" + _tY, true);
+		if (_radius > 0) {
+			_indexOf = isInBlownUpList(_x, _tY);
+			if (_indexOf == -1)	blownUpTiles.push( { x:_x, y:_tY, p:1 } );
+			else				blownUpTiles[_indexOf].p++;
+		}
 		// Blast up
 		_radius = _size;
 		_tY = _y - 1;
@@ -280,8 +285,11 @@ class Level extends Entity, implements IAStarClient
 			_tY--;
 			_radius--;
 		}
-		if (!blownUpTiles.exists(_x + ";" + _tY))
-			blownUpTiles.set(_x + ";" + _tY, true);
+		if (_radius > 0) {
+			_indexOf = isInBlownUpList(_x, _tY);
+			if (_indexOf == -1)	blownUpTiles.push( { x:_x, y:_tY, p:1 } );
+			else				blownUpTiles[_indexOf].p++;
+		}
 		// Blast right
 		_radius = _size;
 		_tX = _x + 1;
@@ -293,8 +301,11 @@ class Level extends Entity, implements IAStarClient
 			_tX++;
 			_radius--;
 		}
-		if (!blownUpTiles.exists(_tX + ";" + _y))
-			blownUpTiles.set(_tX + ";" + _y, true);
+		if (_radius > 0) {
+			_indexOf = isInBlownUpList(_tX, _y);
+			if (_indexOf == -1)	blownUpTiles.push( { x:_tX, y:_y, p:1 } );
+			else				blownUpTiles[_indexOf].p++;
+		}
 		// Blast left
 		_radius = _size;
 		_tX = _x - 1;
@@ -306,18 +317,27 @@ class Level extends Entity, implements IAStarClient
 			_tX--;
 			_radius--;
 		}
-		if (!blownUpTiles.exists(_tX + ";" + _y))
-			blownUpTiles.set(_tX + ";" + _y, true);
+		if (_radius > 0) {
+			_indexOf = isInBlownUpList(_tX, _y);
+			if (_indexOf == -1)	blownUpTiles.push( { x:_tX, y:_y, p:1 } );
+			else				blownUpTiles[_indexOf].p++;
+		}
 	}
 	
-	public function stopsBlast (_x:Int, _y:Int) :Bool {
-		//var _entities:Array<LevelEntity> = data[_y][_x];
+	private function isInBlownUpList (_x:Int, _y:Int) :Int {
+		for (_i in 0...blownUpTiles.length) {
+			if (blownUpTiles[_i].x == _x && blownUpTiles[_i].y == _y)
+				return _i;
+		}
+		return -1;
+	}
+	
+	private function stopsBlast (_x:Int, _y:Int) :Bool {
+		//trace("stopsBlast @ " + _x + ";" + _y);
 		var _entities:Array<LevelEntity> = getEntitiesAtPoint(new Point(_x * Game.TILE_SIZE, _y * Game.TILE_SIZE));
+		//trace("\t" + _entities);
 		for (_e in _entities) {
-			if (_e.stopsBlast()) {
-				trace(_x + ";" + _y + ": " + _e.type + " -> " + _e.stopsBlast());
-				return true;
-			}
+			if (_e.stopsBlast())	return true;
 		}
 		return false;
 	}
@@ -336,7 +356,7 @@ class Level extends Entity, implements IAStarClient
 	
 }
 
-
+typedef BlowUpInfo = { x:Int, y:Int, p:Int }
 
 
 

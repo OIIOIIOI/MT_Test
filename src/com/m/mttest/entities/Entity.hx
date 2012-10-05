@@ -101,21 +101,9 @@ class Entity
 		return -1;
 	}
 	
-	/*private function getDepth () :Int {
-		var _d:Float = 0;
-		var _e:Entity = this;
-		while (_e.parent != null) {
-			_d += _e.parent.getChildIndex(_e) + 1;
-			_d /= 10;
-			_e = _e.parent;
-		}
-		_d += 1;
-		// Add zeros. TODO Make this better
-		while (_d < 999999999) {
-			_d *= 10;
-		}
-		return Std.int(_d);
-	}*/
+	public function clickHandler () :Void {
+		trace("clicked " + this);
+	}
 	
 	private function getX () :Float {
 		return x;

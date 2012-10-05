@@ -58,7 +58,7 @@ class Blast extends LevelEntity
 		//alpha = 0.2;
 		//effects.push(new ColorBlinkFX(1000, new ColorTransform(0, 0, 0), null, 12));
 		//effects.push(new FadeFX(40, [1, 0], completeHandler));
-		addFX(new AdvancedFadeFX(20, [new ColorTransform(), new ColorTransform(1, 1, 1, 0.1)], completeHandler));
+		addFX(new AdvancedFadeFX(10, [new ColorTransform(), new ColorTransform(1, 1, 1, 0.1)], completeHandler));
 	}
 	
 	private function completeHandler () :Void {

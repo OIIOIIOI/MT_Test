@@ -1,5 +1,6 @@
 package com.m.mttest;
 
+import com.m.mttest.display.Interface;
 import com.m.mttest.entities.BasicBlock;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.LevelEntity;
@@ -43,6 +44,7 @@ class Game extends Sprite
 	
 	private var scene:Entity;
 	private var level:Level;
+	private var GUI:Interface;
 	private var selection:Selection;
 	
 	private var lastFrame:Float;// The last time the game was updated
@@ -71,9 +73,14 @@ class Game extends Sprite
 		entities.push(scene);
 		
 		level = new Level();
-		//level.load("level_0");
-		level.load("sandbox_2");
+		level.load("level1");
+		//level.load("sandbox0");
+		level.x = (SIZE.width - level.width) / 2;
+		level.y = (SIZE.height - level.height) / 2;
 		scene.addChild(level);
+		
+		GUI = new Interface();
+		scene.addChild(GUI);
 		
 		selection = new Selection();
 		
@@ -154,7 +161,6 @@ class Game extends Sprite
 		var _blendMode:BlendMode = _entity.blendMode;
 		// Draw entity
 		canvasData.draw(_entity.bitmapData, _matrix, _transform, _blendMode, _mask);
-		
 		// Draw entity's children
 		for (_e in _entity.children) {
 			drawEntity(_e);
@@ -167,11 +173,10 @@ class Game extends Sprite
 		// Search targets
 		var _point:Point = new Point(Std.int(_event.stageX / SCALE), Std.int(_event.stageY / SCALE));
 		var _targets:Array<Entity> = getEntitiesAt(entities[0], Std.int(_point.x), Std.int(_point.y));
+		trace("click targets " + _targets);
 		if (_targets.length > 0) {
 			var _target:Entity = _targets.pop();
-			if (Std.is(_target, Level)) {
-				cast(_target, Level).click(_point);
-			}
+			_target.clickHandler();
 		}
 	}
 	
@@ -181,11 +186,8 @@ class Game extends Sprite
 			//trace(Type.getClass(_entity));
 			_targets.push(_entity);
 		}
-		// If target is not the level, continue looking for children
-		if (!Std.is(_entity, Level)) {
-			for (_e in _entity.children) {
-				_targets = _targets.concat(getEntitiesAt(_e, _x, _y));
-			}
+		for (_e in _entity.children) {
+			_targets = _targets.concat(getEntitiesAt(_e, _x, _y));
 		}
 		return _targets;
 	}

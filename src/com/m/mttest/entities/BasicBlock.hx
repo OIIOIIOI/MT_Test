@@ -20,16 +20,26 @@ class BasicBlock extends LevelEntity
 		
 		var _anim:Animation;
 		_anim = new Animation(IDLE, "tiles");
-		if (_type == unbreakable_wall)	_anim.addFrame(new AnimFrame("fence"));
+		if (_type == unbreakable_wall) {
+			_anim.addFrame(new AnimFrame("fence" + Std.random(3)));
+		}
+		else if (_type == blocked) {
+			_anim.addFrame(new AnimFrame("seed" + Std.random(2)));
+		}
+		else if (_type == hole) {
+			_anim.addFrame(new AnimFrame("hole"));
+		}
 		else if (_type == floor) {
-			_anim.addFrame(new AnimFrame("grass" + Std.random(7)));
+			_anim.addFrame(new AnimFrame("grass" + Std.random(8)));
 		}
 		else if (_type == exit) {
 			_anim.addFrame(new AnimFrame("exit0"));
 			_anim.addFrame(new AnimFrame("exit1"));
 			_anim.addFrame(new AnimFrame("exit2"));
 			_anim.addFrame(new AnimFrame("exit3"));
-			_anim.fps = 8;
+			_anim.addFrame(new AnimFrame("exit4"));
+			_anim.addFrame(new AnimFrame("exit5"));
+			_anim.fps = 10;
 		}
 		if (_anim.frames.length > 0) {
 			anims.push(_anim);

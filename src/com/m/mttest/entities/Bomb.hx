@@ -38,9 +38,8 @@ class Bomb extends LevelEntity
 		
 		state = normal;
 		size = _size;
-		timer = Std.random(10);
-		//timer = 0;
-		//timer = Std.int(Math.max(Math.min(timer, 5), 0));
+		//timer = Std.random(5);
+		timer = 0;
 		left = timer;
 		
 		if (timer > 0) {
@@ -91,7 +90,7 @@ class Bomb extends LevelEntity
 		super.update();
 	}
 	
-	override public function blowUp () :Void {
+	override public function blowUp (_power:Int = 1) :Void {
 		if (number != null) {
 			removeChild(number);
 			number = null;
@@ -105,9 +104,8 @@ class Bomb extends LevelEntity
 		play(BOOM);
 		
 		level.blastBomb(mapX, mapY);
-		//level.addChild(new Emitter(x + width / 2, y + height / 2));
 		
-		super.blowUp();
+		super.blowUp(_power);
 	}
 	
 }
