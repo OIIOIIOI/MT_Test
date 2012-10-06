@@ -25,7 +25,7 @@ class FadeFX extends FX
 	
 	private function getAlpha () :Float
 	{
-		var _value:Float = values[0] - (values[0] - values[1]) * m_elapsed / m_duration;
+		var _value:Float = values[0] - (values[0] - values[1]) * elapsed / duration;
 		return _value;
 	}
 	

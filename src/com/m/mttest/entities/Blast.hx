@@ -8,6 +8,7 @@ import com.m.mttest.fx.ColorBlinkFX;
 import com.m.mttest.fx.FadeFX;
 import com.m.mttest.levels.Level;
 import flash.geom.ColorTransform;
+import flash.geom.Rectangle;
 
 /**
  * ...
@@ -23,6 +24,9 @@ class Blast extends LevelEntity
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level, _animation:String) {
 		super(_x, _y, _level, LEType.blast);
+		
+		hitBox = new Rectangle(2, 2, 12, 12);
+		//drawHitBox = true;
 		
 		var _anim:Animation;
 		_anim = new Animation(BOTH, "tiles");
@@ -58,7 +62,7 @@ class Blast extends LevelEntity
 		//alpha = 0.2;
 		//effects.push(new ColorBlinkFX(1000, new ColorTransform(0, 0, 0), null, 12));
 		//effects.push(new FadeFX(40, [1, 0], completeHandler));
-		addFX(new AdvancedFadeFX(10, [new ColorTransform(), new ColorTransform(1, 1, 1, 0.1)], completeHandler));
+		addFX(new AdvancedFadeFX(10, [new ColorTransform(), new ColorTransform(1, 1, 1, 0.1)], completeHandler, 40));
 	}
 	
 	private function completeHandler () :Void {

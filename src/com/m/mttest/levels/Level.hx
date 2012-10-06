@@ -3,11 +3,15 @@ package com.m.mttest.levels;
 import com.m.mttest.anim.FrameManager;
 import com.m.mttest.entities.Blast;
 import com.m.mttest.entities.Bomb;
+import com.m.mttest.entities.Emitter;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.entities.Sheep;
 import com.m.mttest.entities.Wall;
+import com.m.mttest.events.EventManager;
+import com.m.mttest.events.GameEvent;
 import com.m.mttest.Game;
+import com.m.mttest.levels.Inventory;
 import flash.display.BitmapData;
 import flash.errors.Error;
 import flash.geom.Point;
@@ -26,13 +30,12 @@ class Level extends Entity, implements IAStarClient
 	// Bitmap data
 	private var levelData:BitmapData;
 	private var userData:BitmapData;
-	// Arrayed data
-	private var data:Array<Array<Array<LevelEntity>>>;
 	// Layers
 	private var sceneLayer:Entity;
 	private var itemsLayer:Entity;
 	private var sheepLayer:Entity;
 	private var blastsLayer:Entity;
+	public var emitter (default, null):Emitter;
 	// A* variables
 	public var rowTotal (default, null):Int;
 	public var colTotal (default, null):Int;
@@ -42,25 +45,30 @@ class Level extends Entity, implements IAStarClient
 	//
 	private var blasts:Hash<String>;
 	private var blownUpTiles:Array<BlowUpInfo>;
-	private var active:Bool;
+	public var endGameEntities (default, null):Array<LevelEntity>;
+	public var active (default, null):Bool;
 	
 	public function new () {
 		super();
 		//
 		allowDiag = false;
 		absoluteSearch = false;
-		// Layers
+		// Entities
 		sceneLayer = new Entity();
 		itemsLayer = new Entity();
 		sheepLayer = new Entity();
 		blastsLayer = new Entity();
+		emitter = new Emitter();
+		//
 		addChild(sceneLayer);
 		addChild(itemsLayer);
 		addChild(sheepLayer);
 		addChild(blastsLayer);
+		addChild(emitter);
 		//
 		blasts = new Hash<String>();
 		blownUpTiles = new Array<BlowUpInfo>();
+		endGameEntities = new Array<LevelEntity>();
 		active = false;
 	}
 	
@@ -70,7 +78,6 @@ class Level extends Entity, implements IAStarClient
 		if (levelData == null)
 			throw new Error("The level \"" + _name + "\" was found");
 		//
-		data = new Array<Array<Array<LevelEntity>>>();
 		userData = new BitmapData(levelData.width, levelData.height, false, 0xFFFFFFFF);
 		// Parse data
 		reset();
@@ -81,45 +88,79 @@ class Level extends Entity, implements IAStarClient
 		// A* init and paths lookups
 		colTotal = Std.int(levelData.width / 2);
 		rowTotal = Std.int(levelData.height / 2);
+		// Check if the map is playable
+		if (!checkPaths())
+			throw new Error("The level \"" + _name + "\" is not playable");
+	}
+	
+	private function checkPaths () :Bool {
+		// Look for the exit tile
 		if (exitPos == null) {
 			trace("No exit tile was found");
-			return;
+			return false;
 		}
 		// Turn destructible tiles off
-		/*absoluteSearch = true;
+		absoluteSearch = true;
 		updateMap();
 		// Search for a path to the exit for each sheep
 		for (_s in sheepLayer.children) {
 			if (cast(_s, Sheep).findPath() == null) {
 				trace("No available path to the exit was found for " + _s);
+				return false;
 			}
-		}*/
+		}
 		// Turn destructible tiles back on
 		absoluteSearch = false;
 		updateMap();
+		return true;
 	}
 	
-	private function reset () :Void {
+	public function reset (_full:Bool = false) :Void {
+		// Deactivate
+		active = false;
+		// Remove entities
+		emitter.clean();
+		while (sceneLayer.numChildren > 0) {
+			sceneLayer.getChildAt(0).destroy();
+			sceneLayer.removeChildAt(0);
+		}
+		while (itemsLayer.numChildren > 0) {
+			itemsLayer.getChildAt(0).destroy();
+			itemsLayer.removeChildAt(0);
+		}
+		while (sheepLayer.numChildren > 0) {
+			sheepLayer.getChildAt(0).destroy();
+			sheepLayer.removeChildAt(0);
+		}
+		while (blastsLayer.numChildren > 0) {
+			blastsLayer.getChildAt(0).destroy();
+			blastsLayer.removeChildAt(0);
+		}
+		blasts = new Hash<String>();
+		blownUpTiles = new Array<BlowUpInfo>();
+		endGameEntities = new Array<LevelEntity>();
+		// Parse data
+		if (_full)	userData = new BitmapData(levelData.width, levelData.height, false, 0xFFFFFFFF);
 		if (levelData != null)	parse(levelData);
 		if (userData != null)	parse(userData);
+		// Update map
+		updateMap();
 	}
 	
 	private function parse (_bitmapData:BitmapData) :Void {
 		var _color:UInt;
 		var _floorType:LEType;
 		var _itemType:LEType;
+		var _variant:Int;
 		var _class:String;
 		var _params:Array<Dynamic>;
 		var _entity:LevelEntity;
 		for (_y in 0...Std.int(_bitmapData.height / 2)) {
-			if (data[_y] == null)
-				data.push(new Array<Array<LevelEntity>>());
 			for (_x in 0...Std.int(_bitmapData.width / 2)) {
-				if (data[_y][_x] == null)
-					data[_y].push(new Array<LevelEntity>());
-				// Background
+				// Floor
 				_color = _bitmapData.getPixel(_x * 2, _y * 2);
 				_floorType = LevelEntity.colorToType(_color);
+				//
 				if (_floorType != null) {
 					_class = LevelEntity.typeToClass(_floorType);
 					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_floorType));
@@ -128,32 +169,54 @@ class Level extends Entity, implements IAStarClient
 				}
 				// Item
 				_color = _bitmapData.getPixel(_x * 2 + 1, _y * 2);
+				_variant = _bitmapData.getPixel(_x * 2 + 1, _y * 2 + 1);
+				if (_variant == Std.int(_color))	_variant = 0;
 				_itemType = LevelEntity.colorToType(_color);
+				//
 				if (_itemType != null && _itemType != _floorType) {
 					_class = LevelEntity.typeToClass(_itemType);
-					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_itemType));
+					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_itemType, _variant));
 					_entity = Type.createInstance(Type.resolveClass(_class), _params);
+					_entity.userPlaced = (_bitmapData == userData);
 					addEntity(_entity);
 				}
 			}
 		}
 	}
 	
-	public function addEntity (_entity:LevelEntity) :Void {
+	private function addEntity (_entity:LevelEntity) :Void {
 		switch (_entity.type) {
 			case LEType.sheep:
 				sheepLayer.addChild(_entity);
+				endGameEntities.push(_entity);
 			case LEType.bomb:
 				itemsLayer.addChild(_entity);
+				endGameEntities.push(_entity);
 				updateMap();
 			case LEType.blast:
 				blastsLayer.addChild(_entity);
 			default:
 				sceneLayer.addChild(_entity);
-				data[_entity.mapY][_entity.mapX].push(_entity);
 		}
 		if (_entity.type == exit)
 			exitPos = new IntPoint(_entity.mapX, _entity.mapY);
+	}
+	
+	private function removeEntity (_entity:LevelEntity) :Void {
+		switch (_entity.type) {
+			case LEType.bomb:
+				_entity.parent.removeChild(_entity);
+				endGameEntities.remove(_entity);
+				updateMap();
+			case LEType.sheep:
+				_entity.parent.removeChild(_entity);
+				endGameEntities.remove(_entity);
+			default:
+				_entity.parent.removeChild(_entity);
+		}
+		// Removing the exit will only be possible while editing levels
+		if (_entity.type == exit)
+			exitPos = null;
 	}
 	
 	public function activate () :Void {
@@ -173,8 +236,40 @@ class Level extends Entity, implements IAStarClient
 	}
 	
 	public function entityClickHandler (_target:LevelEntity) :Void {
-		if (_target.type == LEType.floor)
-			addEntity(new Bomb(_target.mapX, _target.mapY, this, Std.random(2)));
+		//trace("entityClickHandler: " + _target.type + " (user placed: " + _target.userPlaced + ")");
+		if (_target.userPlaced) {
+			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.REMOVE_ITEM, _target));
+			return;
+		}
+		if (_target.type == LEType.floor) {
+			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.PLACE_ITEM, new IntPoint(_target.mapX, _target.mapY)));
+			return;
+		}
+	}
+	
+	public function placeItem (_invObject:InvObject, _point:IntPoint) :Void {
+		var _class:String = LevelEntity.typeToClass(_invObject.type);
+		var _params:Array<Dynamic> = [_point.x, _point.y, this].concat(LevelEntity.getConstructorParams(_invObject.type, _invObject.variant));
+		var _entity:LevelEntity = Type.createInstance(Type.resolveClass(_class), _params);
+		_entity.userPlaced = true;
+		addEntity(_entity);
+		var _color:UInt = LevelEntity.typeToColor(_invObject.type);
+		userData.setPixel(_entity.mapX * 2 + 1, _entity.mapY * 2, _color);
+		_color = _invObject.variant;
+		userData.setPixel(_entity.mapX * 2 + 1, _entity.mapY * 2 + 1, _color);
+	}
+	
+	public function removeItem (_entity:LevelEntity) :Void {
+		// Remove entity from scene
+		removeEntity(_entity);
+		// Update bitmap data
+		var _bitmapData:BitmapData;
+		if (_entity.userPlaced)	_bitmapData = userData;
+		else					_bitmapData = levelData;
+		// Get floor color and reset item pixels
+		var _color:UInt = _bitmapData.getPixel(_entity.mapX * 2, _entity.mapY * 2);
+		_bitmapData.setPixel(_entity.mapX * 2 + 1, _entity.mapY * 2, _color);
+		_bitmapData.setPixel(_entity.mapX * 2 + 1, _entity.mapY * 2 + 1, _color);
 	}
 	
 	private function getEntitiesAtPoint (_point:Point) :Array<LevelEntity> {
@@ -226,9 +321,9 @@ class Level extends Entity, implements IAStarClient
 		var _sheep:Sheep;
 		for (_s in sheepLayer.children) {
 			_sheep = cast(_s, Sheep);
-			if (_sheep.state == SheepState.alive) {
+			if (_sheep.state != SheepState.dead) {
 				for (_b in blastsLayer.children) {
-					if (_sheep.hitTestRect(_b.absRect)) {
+					if (_sheep.hitTestRect(_b.absHitBox)) {
 						_sheep.blowUp();
 						break;
 					}
@@ -336,6 +431,7 @@ class Level extends Entity, implements IAStarClient
 		//trace("stopsBlast @ " + _x + ";" + _y);
 		var _entities:Array<LevelEntity> = getEntitiesAtPoint(new Point(_x * Game.TILE_SIZE, _y * Game.TILE_SIZE));
 		//trace("\t" + _entities);
+		if (_entities.length == 0)	return true;
 		for (_e in _entities) {
 			if (_e.stopsBlast())	return true;
 		}

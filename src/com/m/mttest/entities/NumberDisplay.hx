@@ -14,6 +14,8 @@ class NumberDisplay extends Entity
 	public function new (_number:Int = 0) {
 		super();
 		
+		mouseEnabled = false;
+		
 		_number = Std.int(Math.max(Math.min(_number, 9), 0));
 		
 		var _anim:Animation;

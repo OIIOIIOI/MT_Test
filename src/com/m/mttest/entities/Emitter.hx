@@ -11,22 +11,32 @@ import flash.geom.ColorTransform;
 class Emitter extends Entity
 {
 	
-	public function new (_x:Float, _y:Float, _type:String = "bomb") {
+	public function new () {
 		super();
-		x = _x;
-		y = _y;
+	}
+	
+	public function spawnParticles (_type:ParticleType, _x:Float, _y:Float) :Void {
 		var _array:Array<Particle> = switch (_type) {
-			case "straw":	getStrawExplosion();
-			case "wool":	getWoolExplosion();
-			case "rock":	getRockExplosion();
-			default:		getBombExplosion();
+			case ParticleType.straw:	getStrawExplosion();
+			case ParticleType.wool:		getWoolExplosion();
+			case ParticleType.rock:		getRockExplosion();
+			case ParticleType.bomb:		getBombExplosion();
 		}
 		for (_p in _array) {
+			_p.x += _x;
+			_p.y += _y;
 			addChild(_p);
 		}
 	}
 	
-	static public function getBombExplosion () :Array<Particle> {
+	public function clean () :Void {
+		while (numChildren > 0) {
+			getChildAt(0).destroy();
+			removeChildAt(0);
+		}
+	}
+	
+	private function getBombExplosion () :Array<Particle> {
 		var _array:Array<Particle> = new Array<Particle>();
 		var _p:Particle;
 		var _r:Int;
@@ -43,7 +53,7 @@ class Emitter extends Entity
 		return _array;
 	}
 	
-	static public function getStrawExplosion () :Array<Particle> {
+	private function getStrawExplosion () :Array<Particle> {
 		var _array:Array<Particle> = new Array<Particle>();
 		var _p:Particle;
 		var _color:UInt;
@@ -56,7 +66,7 @@ class Emitter extends Entity
 		return _array;
 	}
 	
-	static public function getWoolExplosion () :Array<Particle> {
+	private function getWoolExplosion () :Array<Particle> {
 		var _array:Array<Particle> = new Array<Particle>();
 		var _p:Particle;
 		var _color:UInt;
@@ -69,7 +79,7 @@ class Emitter extends Entity
 		return _array;
 	}
 	
-	static public function getRockExplosion () :Array<Particle> {
+	private function getRockExplosion () :Array<Particle> {
 		var _array:Array<Particle> = new Array<Particle>();
 		var _p:Particle;
 		var _color:UInt;
@@ -112,4 +122,11 @@ class Particle extends Entity
 			dead = true;
 	}
 	
+}
+
+enum ParticleType {
+	straw;
+	wool;
+	rock;
+	bomb;
 }

@@ -18,9 +18,6 @@ import com.m.mttest.levels.Level;
 class LevelEntity extends Entity
 {
 	
-	static public var ACTION_SELECT:String = "action_select";
-	static public var ACTION_PLACE:String = "action_place";
-	
 	public var type (default, null):LEType;
 	public var mapX (default, null):Int;
 	public var mapY (default, null):Int;
@@ -29,6 +26,8 @@ class LevelEntity extends Entity
 	public var active:Bool;
 	public var walkable (getWalkable, never):Bool;
 	public var destructible (getDestructible, never):Bool;
+	public var variant (getVariant, never):Int;
+	public var userPlaced:Bool;
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level, ?_type:LEType = null) {
 		super();
@@ -40,13 +39,18 @@ class LevelEntity extends Entity
 		level = _level;
 		type = (_type != null)? _type : LEType.unbreakable_wall;
 		width = height = Game.TILE_SIZE;
-		color = typeToColor(_type);
+		color = 0xFF000000 + typeToColor(_type);
+		userPlaced = false;
 		active = false;
+	}
+	
+	private function getVariant () :Int {
+		return 0;
 	}
 	
 	override public function clickHandler () :Void {
 		level.entityClickHandler(this);
-		trace("clicked " + this + " (" + type + ")");
+		//trace("clicked " + this + " (" + type + ")");
 	}
 	
 	public function activate () :Void {
@@ -92,18 +96,19 @@ class LevelEntity extends Entity
 			case hole:				"com.m.mttest.entities.BasicBlock";
 			case floor:				"com.m.mttest.entities.BasicBlock";
 			case blocked:			"com.m.mttest.entities.BasicBlock";
+			case exit:				"com.m.mttest.entities.BasicBlock";
 			case bomb:				"com.m.mttest.entities.Bomb";
 			case sheep:				"com.m.mttest.entities.Sheep";
-			case exit:				"com.m.mttest.entities.BasicBlock";
 			case wall:				"com.m.mttest.entities.Wall";
 			case rock:				"com.m.mttest.entities.Rock";
 			case blast:				"com.m.mttest.entities.Blast";
 		}
 	}
 	
-	static public function getConstructorParams (_type:LEType) :Array<Dynamic> {
+	static public function getConstructorParams (_type:LEType, _variant:Int = 0) :Array<Dynamic> {
 		return switch (_type) {
-			case bomb, sheep, wall, rock, blast:						[];
+			case bomb:											[_variant];
+			case sheep, wall, rock, blast:						[];
 			case unbreakable_wall, floor, exit, hole, blocked:	[_type];
 		}
 	}
@@ -113,12 +118,12 @@ class LevelEntity extends Entity
 			case unbreakable_wall:	0xFF00FF;
 			case hole:				0xCC00CC;
 			case blocked:			0x990099;
-			case floor:				0x999999;
+			case floor:				0x9999FF;
+			case wall:				0x6666FF;
+			case rock:				0x3333FF;
 			case bomb:				0xFF0000;
 			case sheep:				0xFFCC00;
 			case exit:				0x00FF00;
-			case wall:				0x666666;
-			case rock:				0x333333;
 			case blast:				0xFFFF00;
 			
 		}
@@ -126,12 +131,12 @@ class LevelEntity extends Entity
 	
 	static public function colorToType (_color:UInt) :LEType {
 		return switch (_color) {
-			case 0x999999:	floor;
+			case 0x9999FF:	floor;
+			case 0x6666FF:	wall;
+			case 0x3333FF:	rock;
 			case 0xFF0000:	bomb;
 			case 0xFFCC00:	sheep;
 			case 0x00FF00:	exit;
-			case 0x666666:	wall;
-			case 0x333333:	rock;
 			case 0xFFFF00:	blast;
 			case 0xFF00FF:	unbreakable_wall;
 			case 0xCC00CC:	hole;
@@ -154,11 +159,3 @@ enum LEType {
 	bomb;
 	blast;
 }
-
-
-
-
-
-
-
-

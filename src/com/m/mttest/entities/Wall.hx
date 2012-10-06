@@ -2,6 +2,7 @@ package com.m.mttest.entities;
 
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
+import com.m.mttest.entities.Emitter;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.levels.Level;
 
@@ -36,7 +37,7 @@ class Wall extends LevelEntity
 		if (state == normal) {
 			state = gone;
 			play(DEAD);
-			level.addChild(new Emitter(x + width / 2, y + height / 2, "straw"));
+			level.emitter.spawnParticles(ParticleType.straw, x + width / 2, y + height / 2);
 		}
 		super.blowUp(_power);
 	}

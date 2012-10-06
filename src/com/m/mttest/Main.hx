@@ -13,6 +13,8 @@ import flash.Lib;
 
 @:bitmap("res/tiles.png") class TilesSheet extends flash.display.BitmapData { }
 @:bitmap("res/levels.png") class LevelsSheet extends flash.display.BitmapData { }
+@:bitmap("res/font_volter.png") class FontVolterSheet extends flash.display.BitmapData { }
+@:bitmap("res/font_superscript.png") class FontSuperscriptSheet extends flash.display.BitmapData { }
 
 class Main
 {
@@ -26,6 +28,8 @@ class Main
 		// Spritesheets
 		FrameManager.store("tiles", new TilesSheet(0, 0), haxe.Resource.getString("tilesJson"));
 		FrameManager.store("levels", new LevelsSheet(0, 0), haxe.Resource.getString("levelsJson"));
+		FrameManager.store("font_volter", new FontVolterSheet(0, 0), haxe.Resource.getString("fontVolterJson"));
+		FrameManager.store("font_superscript", new FontSuperscriptSheet(0, 0), haxe.Resource.getString("fontSuperscriptJson"));
 		// Create and add game
 		Lib.current.stage.addChild(new Game());
 	}

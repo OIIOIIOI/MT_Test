@@ -2,9 +2,13 @@ package com.m.mttest.entities;
 
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
+import com.m.mttest.entities.Emitter;
 import com.m.mttest.entities.LevelEntity;
+import com.m.mttest.events.EventManager;
+import com.m.mttest.events.GameEvent;
 import com.m.mttest.Game;
 import com.m.mttest.levels.Level;
+import flash.geom.Rectangle;
 import haxe.Timer;
 import statm.explore.haxeAStar.AStar;
 import statm.explore.haxeAStar.IntPoint;
@@ -19,6 +23,7 @@ class Sheep extends LevelEntity
 	
 	static public var IDLE:String = "idle";
 	static public var JUMP:String = "jump";
+	static public var MOVING:String = "moving";
 	static public var DEAD:String = "dead";
 	
 	public var state (default, null):SheepState;
@@ -26,17 +31,25 @@ class Sheep extends LevelEntity
 	private var pathIndex:Int;
 	private var speed:Float;
 	private var wait:Bool;
+	private var sleepFX:SleepFX;
+	//private var wakeFX:WakeFX;
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level) {
 		super(_x, _y, _level, LEType.sheep);
 		
-		state = alive;
+		state = asleep;
 		pathIndex = 0;
-		speed = 0.7;
+		speed = 0.8;
 		wait = true;
+		
+		hitBox = new Rectangle(4, 4, 8, 8);
+		//drawHitBox = true;
 		
 		var _anim:Animation;
 		_anim = new Animation(IDLE, "tiles");
+		_anim.addFrame(new AnimFrame("sheep_asleep"));
+		anims.push(_anim);
+		_anim = new Animation(MOVING, "tiles");
 		_anim.addFrame(new AnimFrame("sheep0"));
 		_anim.addFrame(new AnimFrame("sheep1"));
 		_anim.fps = 8;
@@ -44,8 +57,8 @@ class Sheep extends LevelEntity
 		_anim = new Animation(JUMP, "tiles");
 		_anim.addFrame(new AnimFrame("sheep_jump"));
 		_anim.addFrame(new AnimFrame("sheep0"));
-		_anim.addFrame(new AnimFrame("sheep1"));
-		_anim.fps = 8;
+		_anim.addFrame(new AnimFrame("sheep0"));
+		_anim.fps = 10;
 		anims.push(_anim);
 		_anim = new Animation(DEAD, "tiles");
 		_anim.addFrame(new AnimFrame("sheep_cry0"));
@@ -57,6 +70,11 @@ class Sheep extends LevelEntity
 		anims.push(_anim);
 		
 		play(IDLE);
+		
+		sleepFX = new SleepFX();
+		sleepFX.x = 1;
+		sleepFX.y = -8;
+		addChild(sleepFX);
 	}
 	
 	override public function update () :Void {
@@ -67,8 +85,16 @@ class Sheep extends LevelEntity
 		if (path == null) {
 			path = findPath();
 			if (path != null) {
+				// FX
+				removeChild(sleepFX);
+				/*wakeFX = new WakeFX();
+				wakeFX.x = 6;
+				wakeFX.y = -12;
+				addChild(wakeFX);*/
+				state = SheepState.moving;
+				// Anim
 				play(JUMP);
-				Timer.delay(function () { if (active) { wait = false; play(IDLE); } }, 1000);
+				Timer.delay(function () { if (active) { wait = false; /*removeChild(wakeFX);*/ play(MOVING); } }, 600);
 			}
 		}
 		// If a path was found, move on
@@ -108,6 +134,12 @@ class Sheep extends LevelEntity
 			}
 			mapX = Math.floor(x / Game.TILE_SIZE);
 			mapY = Math.floor(y / Game.TILE_SIZE);
+			// Check arrival
+			if (x == path[path.length - 1].x * Game.TILE_SIZE && y == path[path.length - 1].y * Game.TILE_SIZE) {
+				active = false;
+				state = SheepState.arrived;
+				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SHEEP_ARRIVED));
+			}
 		}
 	}
 	
@@ -116,12 +148,14 @@ class Sheep extends LevelEntity
 	}
 	
 	override public function blowUp (_power:Int = 1) :Void {
-		if (state == SheepState.alive) {
+		if (state != SheepState.dead) {
 			//trace("blowUp");
+			removeChild(sleepFX);
 			state = SheepState.dead;
 			active = false;
 			play(DEAD);
-			level.addChild(new Emitter(x + width / 2, y + height / 2, "wool"));
+			level.emitter.spawnParticles(ParticleType.wool, x + width / 2, y + height / 2);
+			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SHEEP_DIED));
 		}
 		super.blowUp(_power);
 	}
@@ -129,7 +163,9 @@ class Sheep extends LevelEntity
 }
 
 enum SheepState {
-	alive;
+	asleep;
+	moving;
+	arrived;
 	dead;
 }
 

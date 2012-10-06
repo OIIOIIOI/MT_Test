@@ -3,6 +3,8 @@ package com.m.mttest.entities;
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.entities.LevelEntity;
+import com.m.mttest.events.EventManager;
+import com.m.mttest.events.GameEvent;
 import com.m.mttest.fx.AdvancedFadeFX;
 import com.m.mttest.fx.ColorBlinkFX;
 import com.m.mttest.fx.ColorFX;
@@ -23,7 +25,7 @@ class Bomb extends LevelEntity
 	static public var ON:String = "on";
 	static public var BOOM:String = "boom";
 	
-	static private var DELAY:Int = 1000;
+	static private var DELAY:Int = 1100;
 	
 	public var state (default, null):BombState;
 	
@@ -33,15 +35,16 @@ class Bomb extends LevelEntity
 	private var left:Int;
 	private var startTime:Float;
 	
-	public function new (_x:Int = 0, _y:Int = 0, _level:Level, _size:Int) {
+	public function new (_x:Int = 0, _y:Int = 0, _level:Level, _variant:Int) {
 		super(_x, _y, _level, LEType.bomb);
 		
 		state = normal;
-		size = _size;
-		//timer = Std.random(5);
-		timer = 0;
+		// Extract params from variant color
+		size = Math.floor(_variant / 256);
+		timer = _variant % 256;
+		//
 		left = timer;
-		
+		// Add timer entity
 		if (timer > 0) {
 			number = new NumberDisplay(timer);
 			number.x = width - number.width - 1;
@@ -60,7 +63,12 @@ class Bomb extends LevelEntity
 		_anim = new Animation(BOOM, "tiles");
 		_anim.addFrame(new AnimFrame("bomb" + size + "_burn"));
 		anims.push(_anim);
+		
 		play(IDLE);
+	}
+	
+	override private function getVariant () :Int {
+		return (size * 256 + timer);
 	}
 	
 	override public function activate () :Void {
@@ -95,7 +103,6 @@ class Bomb extends LevelEntity
 			removeChild(number);
 			number = null;
 		}
-		
 		state = gone;
 		active = false;
 		
@@ -103,9 +110,10 @@ class Bomb extends LevelEntity
 		blendMode = BlendMode.MULTIPLY;
 		play(BOOM);
 		
-		level.blastBomb(mapX, mapY);
-		
+		level.blastBomb(mapX, mapY, size + 1);
 		super.blowUp(_power);
+		
+		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.BOMB_EXPLODED));
 	}
 	
 }

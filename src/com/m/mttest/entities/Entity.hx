@@ -26,18 +26,18 @@ class Entity
 	public var rect (getRect, never):Rectangle;
 	public var absRect (getAbsRect, never):Rectangle;
 	public var color:UInt;
-	public var scaleX:Int;
-	public var scaleY:Int;
-	public var scale (getScale, setScale):Int;
+	public var scale (default, setScale):Int;
 	
 	public var dead:Bool;
 	
 	public var parent (default, null) :Entity;
 	public var children (default, null) :Array<Entity>;
 	public var numChildren (getNumChildren, never) :Int;
-	//public var depth (getDepth, never):Int;
 	public var absX (getAbsX, never):Float;
 	public var absY (getAbsY, never):Float;
+	public var absScale (getAbsScale, never):Int;
+	
+	public var mouseEnabled:Bool;
 	
 	public var anims (default, null):Array<Animation>;
 	public var currentAnim (default, null):Int;
@@ -48,6 +48,9 @@ class Entity
 	private var lastDraw:Float;
 	public var bitmapData (getBitmapData, null):BitmapData;
 	public var frameOffset (getFrameOffset, null):Point;
+	public var hitBox:Rectangle;
+	public var absHitBox (getAbsHitBox, never):Rectangle;
+	public var drawHitBox:Bool;
 	
 	public var effects (default, null):Array<FX>;
 	public var alpha:Float;
@@ -58,13 +61,14 @@ class Entity
 		dead = false;
 		
 		x = y = 0;
-		scaleX = scaleY = 1;
+		scale = 1;
 		effects = new Array<FX>();
 		alpha = 1;
 		blendMode = BlendMode.NORMAL;
 		
 		parent = null;
 		children = new Array<Entity>();
+		mouseEnabled = true;
 		
 		resetAnims();
 		
@@ -74,6 +78,7 @@ class Entity
 		frameOffset = new Point();
 		
 		lastDraw = Date.now().getTime();
+		paused = false;
 	}
 	
 	public function addChild (_entity:Entity) :Void {
@@ -89,8 +94,14 @@ class Entity
 		_entity.parent = null;
 	}
 	
+	public function removeChildAt (_index:Int) :Void {
+		if (_index > numChildren - 1 || _index < -1)	return;
+		children.splice(_index, 1);
+	}
+	
 	private function getNumChildren () :Int {
-		return children.length;
+		if (children == null)	return 0;
+		else					return children.length;
 	}
 	
 	public function getChildIndex (_child:Entity) :Int {
@@ -101,8 +112,13 @@ class Entity
 		return -1;
 	}
 	
+	public function getChildAt (_index:Int) :Entity {
+		if (_index > numChildren - 1 || _index < -1)	return null;
+		return children[_index];
+	}
+	
 	public function clickHandler () :Void {
-		trace("clicked " + this);
+		//trace("clicked " + this);
 	}
 	
 	private function getX () :Float {
@@ -156,6 +172,16 @@ class Entity
 		return _v;
 	}
 	
+	private function getAbsScale () :Int {
+		var _v:Int = scale;
+		var _e:Entity = this;
+		while (_e.parent != null) {
+			_v *= _e.parent.scale;
+			_e = _e.parent;
+		}
+		return _v;
+	}
+	
 	public function getRect () :Rectangle {
 		return new Rectangle(x, y, width, height);
 	}
@@ -164,14 +190,30 @@ class Entity
 		return new Rectangle(absX, absY, width, height);
 	}
 	
+	public function getAbsHitBox () :Rectangle {
+		var _rect:Rectangle = absRect.clone();
+		_rect.x += hitBox.x;
+		_rect.y += hitBox.y;
+		_rect.width = hitBox.width;
+		_rect.height = hitBox.height;
+		return _rect;
+	}
+	
+	// TODO use hitbox, just like hitTestRect
 	public function hitTestPoint (_point:Point, _abs:Bool = true) :Bool {
 		if (_abs)	return (_point.x >= absX && _point.x < absX + width && _point.y >= absY && _point.y < absY + height);
 		else		return (_point.x >= x && _point.x < x + width && _point.y >= y && _point.y < y + height);
 	}
 	
 	public function hitTestRect (_rect:Rectangle, _abs:Bool = true) :Bool {
-		if (_abs)	return (absRect.intersects(_rect));
-		else		return (rect.intersects(_rect));
+		var _hitRect:Rectangle = (_abs) ? absRect.clone() : rect.clone();
+		if (hitBox != null) {
+			_hitRect.x += hitBox.x;
+			_hitRect.y += hitBox.y;
+			_hitRect.width = hitBox.width;
+			_hitRect.height = hitBox.height;
+		}
+		return (_hitRect.intersects(_rect));
 	}
 	
 	public function addFX (_fx:FX, _overwrite:Bool = true) :Void {
@@ -235,6 +277,7 @@ class Entity
 			}
 			lastDraw = Date.now().getTime();
 		}
+		
 		// Update FX
 		for (_fx in effects) {
 			if (_fx.complete)	removeFX(_fx);
@@ -283,6 +326,19 @@ class Entity
 			width = bitmapData.width;
 			height = bitmapData.height;
 		}
+		if (drawHitBox) {
+			var _hitData:BitmapData;
+			var _point:Point = new Point();
+			if (hitBox != null) {
+				_hitData = new BitmapData(Std.int(hitBox.width), Std.int(hitBox.height), true, 0x80FF00FF);
+				_point.x = hitBox.x;
+				_point.y = hitBox.y;
+			}
+			else _hitData = new BitmapData(Std.int(rect.width), Std.int(rect.height), true, 0x80FF00FF);
+			bitmapData.copyPixels(_hitData, _hitData.rect, _point, null, null, true);
+			_hitData.dispose();
+			_hitData = null;
+		}
 		return bitmapData;
 	}
 	
@@ -293,13 +349,9 @@ class Entity
 		else return new Point();
 	}
 	
-	private function getScale () :Int {
-		return Std.int((scaleX + scaleY) / 2);
-	}
 	private function setScale (_scale:Int) :Int {
-		scaleX = _scale;
-		scaleY = _scale;
-		return _scale;
+		scale = _scale;
+		return scale;
 	}
 	
 	private function getCurrentAnimName () :String {
