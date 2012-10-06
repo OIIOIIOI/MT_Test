@@ -79,7 +79,7 @@ class Inventory extends Entity
 				_slot.x = 1;
 				_slot.y = _i * (_slot.height + 1) + 1;
 				slots.addChild(_slot);
-				if (height == 1)	height = list.length * (_slot.height + 1) + 2;
+				if (height == 1)	height = list.length * (_slot.height + 1) + 1;
 			}
 		}
 		for (_i in 0...slots.numChildren) {

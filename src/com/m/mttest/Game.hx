@@ -81,8 +81,8 @@ class Game extends Sprite
 		entities.push(scene);
 		
 		//var _levelName:String = "tuto_basics";
-		var _levelName:String = "tuto_timer";
-		//var _levelName:String = "tuto_rock";
+		//var _levelName:String = "tuto_timer";
+		var _levelName:String = "tuto_rock";
 		level = new Level();
 		level.load(_levelName);
 		level.x = (SIZE.width - level.width) / 2;
