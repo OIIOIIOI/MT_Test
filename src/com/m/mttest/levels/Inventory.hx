@@ -4,9 +4,11 @@ import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.anim.FrameManager;
 import com.m.mttest.display.BitmapText;
+import com.m.mttest.display.TextLayer;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.InvEntity;
 import com.m.mttest.entities.LevelEntity;
+import com.m.mttest.Game;
 import flash.display.BitmapData;
 import flash.errors.Error;
 
@@ -47,9 +49,9 @@ class Inventory extends Entity
 		slots = new Entity();
 		addChild(slots);
 		// Name
-		itemName = new BitmapText("...", "font_m_mini");
-		itemName.y = height + 4;
-		addChild(itemName);
+		itemName = new BitmapText("...");
+		itemName.scale = 2;
+		TextLayer.instance.addChild(itemName);
 		// Parse data
 		parse();
 	}
@@ -80,11 +82,11 @@ class Inventory extends Entity
 				else				list[_indexOf].count++;
 			}
 		}
-		refresh();
+		//refresh();
 		//trace("inventory: " + list);
 	}
 	
-	private function refresh () :Void {
+	public function refresh () :Void {
 		if (slots.numChildren == 0) {
 			var _slot:InvSlot;
 			var _count:Int = (invData.width <= 4) ? 4 : 8;
@@ -101,11 +103,17 @@ class Inventory extends Entity
 		}
 		// One-for-one method
 		var _index:Int = 0;
+		var _break:Bool = false;
 		for (_i in 0...list.length) {
+			if (_break)	break;
 			for (_j in 0...(list[_i].count - list[_i].used)) {
 				cast(slots.getChildAt(_index), InvSlot).listIndex = _i;
 				cast(slots.getChildAt(_index), InvSlot).display(list[_i].type, list[_i].variant);
 				_index++;
+				if (_index >= 8) {
+					_break = true;
+					break;
+				}
 			}
 		}
 		/*// Stacking method
@@ -115,6 +123,7 @@ class Inventory extends Entity
 				cast(slots.getChildAt(_index), InvSlot).listIndex = _i;
 				cast(slots.getChildAt(_index), InvSlot).display(list[_i].type, list[_i].variant);
 				_index++;
+				if (_index >= 8)	break;
 			}
 		}*/
 		// If at least one slot is full, select the first one
@@ -123,6 +132,9 @@ class Inventory extends Entity
 			index = 0;
 		}
 		else index = -1;
+		
+		itemName.x = absX * Game.SCALE;
+		itemName.y = absY * Game.SCALE;
 	}
 	
 	private function isInList (_type:LEType, _variant:Int) :Int {
@@ -172,8 +184,9 @@ class Inventory extends Entity
 		if (index != -1)
 			slots.getChildAt(index).play(InvSlot.OFF);
 		index = slots.getChildIndex(_target);
+		//index = _target.listIndex;
 		_target.play(InvSlot.ON);
-		itemName.text = LevelEntity.typeToName(list[index].type, list[index].variant);
+		itemName.text = LevelEntity.typeToName(list[_target.listIndex].type, list[_target.listIndex].variant);
 	}
 	
 }

@@ -31,8 +31,8 @@ class Play extends Scene
 		super();
 		// Pause
 		pauseButton = new FastEntity("button_pause");
-		pauseButton.x = Game.SIZE.width - pauseButton.width - 4;
-		//pauseButton.y = Game.SIZE.height - pauseButton.height - 4;
+		pauseButton.x = Game.SIZE.width / Game.SCALE - pauseButton.width - 4;
+		//pauseButton.y = Game.SIZE.height / Game.SCALE - pauseButton.height - 4;
 		pauseButton.y = 4;
 		addChild(pauseButton);
 		// Init
@@ -44,14 +44,15 @@ class Play extends Scene
 		// Load level
 		level = new Level();
 		level.load(_level);
-		level.x = (Game.SIZE.width - level.width) / 2;
-		level.y = (Game.SIZE.height - level.height) / 2;
+		level.x = (Game.SIZE.width / Game.SCALE - level.width) / 2;
+		level.y = (Game.SIZE.height / Game.SCALE - level.height) / 2 - 2;
 		addChild(level);
 		// Load inventory
 		inventory = new Inventory();
 		inventory.load(_level + "_inv");
 		inventory.x = level.x + level.width - 10;
-		inventory.y = level.y + 3;
+		inventory.y = (Game.SIZE.height / Game.SCALE - inventory.height) / 2;
+		inventory.refresh();
 		addChild(inventory);
 		// GUI
 		GUI = new Interface();

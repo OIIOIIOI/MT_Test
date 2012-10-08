@@ -28,18 +28,18 @@ class LevelSelect extends Scene
 		
 		title = new FastEntity("title_level_select");
 		title.scale = 2;
-		title.x = (Game.SIZE.width - title.width * title.scale) / 2;
+		title.x = (Game.SIZE.width / Game.SCALE - title.width * title.scale) / 2;
 		title.y = 12;
 		addChild(title);
 		
 		back = new FastEntity("button_home_22");
 		back.x = 8;
-		back.y = Game.SIZE.height - back.height - 8;
+		back.y = Game.SIZE.height / Game.SCALE - back.height - 8;
 		addChild(back);
 		
 		sound = new FastEntity("button_sound_on");
-		sound.x = Game.SIZE.width - sound.width - 8;
-		sound.y = Game.SIZE.height - sound.height - 8;
+		sound.x = Game.SIZE.width / Game.SCALE - sound.width - 8;
+		sound.y = Game.SIZE.height / Game.SCALE - sound.height - 8;
 		addChild(sound);
 		
 		slots = new Entity();
@@ -54,8 +54,8 @@ class LevelSelect extends Scene
 			if (_slot.height > slots.height)	slots.height = _slot.height;
 		}
 		slots.width--;
-		slots.x = (Game.SIZE.width - slots.width) / 2;
-		slots.y = (Game.SIZE.height - slots.height) / 2;
+		slots.x = (Game.SIZE.width / Game.SCALE - slots.width) / 2;
+		slots.y = (Game.SIZE.height / Game.SCALE - slots.height) / 2;
 	}
 	
 	public function entityClickHandler (_target:LevelSlot) :Void {
@@ -92,7 +92,7 @@ class LevelSlot extends Entity
 			number = new BitmapText(Std.string(index + 1), "font_numbers_gold");
 			number.mouseEnabled = false;
 			//number.scale = 2;
-			number.x = (width - number.width) / 2 + 1;
+			number.x = (width - number.width) / 2;
 			number.y = (height - number.height) / 2;
 			addChild(number);
 		}
@@ -100,7 +100,7 @@ class LevelSlot extends Entity
 			lock = new Lock();
 			lock.mouseEnabled = false;
 			lock.x = (width - lock.width) / 2;
-			lock.y = (height - lock.height) / 2;
+			lock.y = (height - lock.height) / 2 - 1;
 			addChild(lock);
 		}
 	}

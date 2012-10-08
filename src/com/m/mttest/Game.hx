@@ -2,6 +2,7 @@ package com.m.mttest;
 
 import com.m.mttest.display.BitmapText;
 import com.m.mttest.display.Interface;
+import com.m.mttest.display.TextLayer;
 import com.m.mttest.entities.BasicBlock;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.LevelEntity;
@@ -41,7 +42,7 @@ using Lambda;
 class Game extends Sprite
 {
 	
-	inline static public var SIZE:Rectangle = new Rectangle(0, 0, 266, 160);// Since the display is at pixel-level, specify how much to scale it
+	inline static public var SIZE:Rectangle = new Rectangle(0, 0, 798, 480);// Since the display is at pixel-level, specify how much to scale it
 	inline static public var SCALE:Int = 3;// Since the display is at pixel-level, specify how much to scale it
 	inline static public var FPS:UInt = 40;// How many times per second do we want the game to update
 	inline static public var MS:Float = 1000 / FPS;
@@ -51,6 +52,7 @@ class Game extends Sprite
 	
 	private var canvas:Bitmap;// The display container
 	private var canvasData:BitmapData;// The display data
+	private var scaledCanvasData:BitmapData;// The display data
 	
 	private var scene:Entity;
 	
@@ -65,11 +67,12 @@ class Game extends Sprite
 			LEVELS.push( { name:"tuto_rock", locked:false } );
 			LEVELS.push( { name:"tuto_timer", locked:false } );
 			LEVELS.push( { name:"tuto_blocking", locked:false } );
-			//LEVELS.push( { name:"sandbox", locked:false } );
+			LEVELS.push( { name:"sandbox", locked:false } );
 			LEVELS.push( { name:"fake_level", locked:true } );
 		}
 		// Create the empty display data
-		canvasData = new BitmapData(Std.int(SIZE.width), Std.int(SIZE.height), false, 0xE7E7E7);
+		canvasData = new BitmapData(Std.int(SIZE.width / SCALE), Std.int(SIZE.height / SCALE), false, 0xE7E7E7);
+		scaledCanvasData = new BitmapData(Std.int(SIZE.width), Std.int(SIZE.height), false, 0xE7E7E7);
 		// Wait for the sprite to be added to the display list
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
@@ -78,8 +81,9 @@ class Game extends Sprite
 		removeEventListener(Event.ADDED_TO_STAGE, init);
 		
 		// Create the display container and scale it
-		canvas = new Bitmap(canvasData);
-		canvas.scaleX = canvas.scaleY = SCALE;
+		//canvas = new Bitmap(canvasData);
+		canvas = new Bitmap(scaledCanvasData);
+		//canvas.scaleX = canvas.scaleY = SCALE;
 		addChild(canvas);
 		
 		// Init scene
@@ -141,11 +145,19 @@ class Game extends Sprite
 		canvasData.fillRect(canvasData.rect, 0xE7E7E7);
 		// Draw entities
 		for (_entity in scene.children) {
-			drawEntity(_entity);
+			drawEntity(_entity, canvasData);
+		}
+		// Scale up
+		var _matrix:Matrix = new Matrix();
+		_matrix.scale(3, 3);
+		scaledCanvasData.draw(canvasData, _matrix);
+		// Draw entities
+		for (_entity in TextLayer.instance.children) {
+			drawEntity(_entity, scaledCanvasData);
 		}
 	}
 	
-	private function drawEntity (_entity:Entity) :Void {
+	private function drawEntity (_entity:Entity, _bitmapData:BitmapData) :Void {
 		var _matrix:Matrix = new Matrix();
 		var _translateOffset:Point = new Point();
 		var _mask:Rectangle = null;
@@ -186,10 +198,10 @@ class Game extends Sprite
 		// Blend mode
 		var _blendMode:BlendMode = _entity.blendMode;
 		// Draw entity
-		canvasData.draw(_entity.bitmapData, _matrix, _transform, _blendMode, _mask);
+		_bitmapData.draw(_entity.bitmapData, _matrix, _transform, _blendMode, _mask);
 		// Draw entity's children
 		for (_e in _entity.children) {
-			drawEntity(_e);
+			drawEntity(_e, _bitmapData);
 		}
 	}
 	
