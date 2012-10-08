@@ -26,7 +26,7 @@ class LevelEntity extends Entity
 	public var active:Bool;
 	public var walkable (getWalkable, never):Bool;
 	public var destructible (getDestructible, never):Bool;
-	public var variant (getVariant, never):Int;
+	public var variant (getVariant, null):Int;
 	public var userPlaced:Bool;
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level, ?_type:LEType = null) {
@@ -38,6 +38,7 @@ class LevelEntity extends Entity
 		y = _y * Game.TILE_SIZE;
 		level = _level;
 		type = (_type != null)? _type : LEType.unbreakable_wall;
+		variant = 0;
 		width = height = Game.TILE_SIZE;
 		color = 0xFF000000 + typeToColor(_type);
 		userPlaced = false;
@@ -45,7 +46,7 @@ class LevelEntity extends Entity
 	}
 	
 	private function getVariant () :Int {
-		return 0;
+		return variant;
 	}
 	
 	override public function clickHandler () :Void {
@@ -63,8 +64,8 @@ class LevelEntity extends Entity
 	
 	private function getWalkable () :Bool {
 		return switch (type) {
-			case unbreakable_wall, hole: false;
-			case floor, sheep, exit, blast, blocked: true;
+			case unbreakable_wall, border: false;
+			case floor, sheep, exit, blast, blocked, hole: true;
 			case bomb: (level.absoluteSearch || cast(this, Bomb).state == BombState.gone);
 			case wall: (level.absoluteSearch || cast(this, Wall).state == WallState.gone);
 			case rock: (level.absoluteSearch || cast(this, Rock).state == RockState.gone);
@@ -74,7 +75,7 @@ class LevelEntity extends Entity
 	public function stopsBlast () :Bool {
 		return switch (type) {
 			case unbreakable_wall: true;
-			case floor, exit, blast, sheep, hole, blocked: false;
+			case floor, exit, blast, sheep, hole, blocked, border: false;
 			case bomb: (cast(this, Bomb).state != BombState.gone);
 			case wall: (cast(this, Wall).state != WallState.gone);
 			case rock: (cast(this, Rock).state != RockState.gone);
@@ -83,7 +84,7 @@ class LevelEntity extends Entity
 	
 	private function getDestructible () :Bool {
 		return switch (type) {
-			case unbreakable_wall, hole, floor, exit, blast, blocked: false;
+			case unbreakable_wall, hole, floor, exit, blast, blocked, border: false;
 			case bomb, sheep: true;
 			case wall: (cast(this, Wall).state != WallState.gone);
 			case rock: (cast(this, Rock).state != RockState.gone);
@@ -93,10 +94,11 @@ class LevelEntity extends Entity
 	static public function typeToClass (_type:LEType) :String {
 		return switch (_type) {
 			case unbreakable_wall:	"com.m.mttest.entities.BasicBlock";
-			case hole:				"com.m.mttest.entities.BasicBlock";
 			case floor:				"com.m.mttest.entities.BasicBlock";
 			case blocked:			"com.m.mttest.entities.BasicBlock";
 			case exit:				"com.m.mttest.entities.BasicBlock";
+			case border:			"com.m.mttest.entities.Border";
+			case hole:				"com.m.mttest.entities.Hole";
 			case bomb:				"com.m.mttest.entities.Bomb";
 			case sheep:				"com.m.mttest.entities.Sheep";
 			case wall:				"com.m.mttest.entities.Wall";
@@ -105,11 +107,27 @@ class LevelEntity extends Entity
 		}
 	}
 	
+	static public function typeToName (_type:LEType, _variant:Int = 0) :String {
+		return switch (_type) {
+			case unbreakable_wall:	"Fence";
+			case floor:				"Field Grass";
+			case blocked:			"Crop";
+			case exit:				"Green Grass";
+			case border:			"...";
+			case hole:				"Hole";
+			case bomb:				Bomb.getName(_variant);
+			case sheep:				"Sheep";
+			case wall:				"Straw";
+			case rock:				"Rock";
+			case blast:				"...";
+		}
+	}
+	
 	static public function getConstructorParams (_type:LEType, _variant:Int = 0) :Array<Dynamic> {
 		return switch (_type) {
-			case bomb:											[_variant];
-			case sheep, wall, rock, blast:						[];
-			case unbreakable_wall, floor, exit, hole, blocked:	[_type];
+			case bomb, hole, border:						[_variant];
+			case sheep, wall, rock, blast:					[];
+			case unbreakable_wall, floor, exit, blocked:	[_type];
 		}
 	}
 	
@@ -118,6 +136,7 @@ class LevelEntity extends Entity
 			case unbreakable_wall:	0xFF00FF;
 			case hole:				0xCC00CC;
 			case blocked:			0x990099;
+			case border:			0x660066;
 			case floor:				0x9999FF;
 			case wall:				0x6666FF;
 			case rock:				0x3333FF;
@@ -141,6 +160,7 @@ class LevelEntity extends Entity
 			case 0xFF00FF:	unbreakable_wall;
 			case 0xCC00CC:	hole;
 			case 0x990099:	blocked;
+			case 0x660066:	border;
 			default:		null;
 		}
 	}
@@ -149,6 +169,7 @@ class LevelEntity extends Entity
 
 enum LEType {
 	unbreakable_wall;
+	border;
 	hole;
 	blocked;
 	floor;

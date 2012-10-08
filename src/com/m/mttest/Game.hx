@@ -16,6 +16,9 @@ import com.m.mttest.fx.FadeFX;
 import com.m.mttest.fx.ShakeFX;
 import com.m.mttest.levels.Inventory;
 import com.m.mttest.levels.Level;
+import com.m.mttest.scenes.LevelSelect;
+import com.m.mttest.scenes.Play;
+import com.m.mttest.scenes.StartMenu;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.display.BlendMode;
@@ -38,67 +41,50 @@ using Lambda;
 class Game extends Sprite
 {
 	
-	inline static private var SIZE:Rectangle = new Rectangle(0, 0, 266, 160);// Since the display is at pixel-level, specify how much to scale it
-	inline static private var SCALE:Int = 3;// Since the display is at pixel-level, specify how much to scale it
+	inline static public var SIZE:Rectangle = new Rectangle(0, 0, 266, 160);// Since the display is at pixel-level, specify how much to scale it
+	inline static public var SCALE:Int = 3;// Since the display is at pixel-level, specify how much to scale it
 	inline static public var FPS:UInt = 40;// How many times per second do we want the game to update
 	inline static public var MS:Float = 1000 / FPS;
 	inline static public var TILE_SIZE:UInt = 16;// The size of a single tile
 	
+	static public var LEVELS:Array<LevelObject>;
+	
 	private var canvas:Bitmap;// The display container
 	private var canvasData:BitmapData;// The display data
 	
-	private var entities:Array<Entity>;// A list of all the entities to update
-	
 	private var scene:Entity;
-	private var level:Level;
-	private var GUI:Interface;
-	
-	private var inventory:Inventory;
 	
 	private var lastFrame:Float;// The last time the game was updated
-	private var endGameTimer:Timer;
 	
 	public function new () {
 		super();
+		
+		if (LEVELS == null) {
+			LEVELS = new Array<LevelObject>();
+			LEVELS.push( { name:"tuto_basics", locked:false } );
+			LEVELS.push( { name:"tuto_rock", locked:false } );
+			LEVELS.push( { name:"tuto_timer", locked:false } );
+			LEVELS.push( { name:"tuto_blocking", locked:false } );
+			//LEVELS.push( { name:"sandbox", locked:false } );
+			LEVELS.push( { name:"fake_level", locked:true } );
+		}
 		// Create the empty display data
 		canvasData = new BitmapData(Std.int(SIZE.width), Std.int(SIZE.height), false, 0xE7E7E7);
-		// Create the entity array
-		entities = new Array<Entity>();
 		// Wait for the sprite to be added to the display list
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 	
 	private function init (_event:Event) :Void {
 		removeEventListener(Event.ADDED_TO_STAGE, init);
+		
 		// Create the display container and scale it
 		canvas = new Bitmap(canvasData);
 		canvas.scaleX = canvas.scaleY = SCALE;
 		addChild(canvas);
 		
 		// Init scene
-		scene = new Entity();
-		//scene.x = scene.y = 8;
-		entities.push(scene);
-		
-		//var _levelName:String = "tuto_basics";
-		//var _levelName:String = "tuto_timer";
-		var _levelName:String = "tuto_rock";
-		level = new Level();
-		level.load(_levelName);
-		level.x = (SIZE.width - level.width) / 2;
-		level.y = (SIZE.height - level.height) / 2;
-		scene.addChild(level);
-		// Inventory
-		inventory = new Inventory();
-		inventory.load(_levelName + "_inv");
-		inventory.x = level.x + level.width;
-		inventory.y = level.y;
-		scene.addChild(inventory);
-		// GUI
-		GUI = new Interface();
-		GUI.x = inventory.x + inventory.width;
-		GUI.y = inventory.y;
-		scene.addChild(GUI);
+		changeScene(GameScene.levelSelect);
+		//changeScene(GameScene.play, "tuto_rock");
 		
 		// Start main loop
 		lastFrame = 0;
@@ -106,48 +92,35 @@ class Game extends Sprite
 		// Click events
 		stage.addEventListener(MouseEvent.CLICK, clickHandler);
 		// Game events
-		EventManager.instance.addEventListener(GameEvent.PLAY_LEVEL, gameEventHandler);
-		EventManager.instance.addEventListener(GameEvent.RESET_LEVEL, gameEventHandler);
-		EventManager.instance.addEventListener(GameEvent.PLACE_ITEM, gameEventHandler);
-		EventManager.instance.addEventListener(GameEvent.REMOVE_ITEM, gameEventHandler);
-		EventManager.instance.addEventListener(GameEvent.SHEEP_DIED, gameEventHandler);
-		EventManager.instance.addEventListener(GameEvent.SHEEP_ARRIVED, gameEventHandler);
-		EventManager.instance.addEventListener(GameEvent.BOMB_EXPLODED, gameEventHandler);
+		EventManager.instance.addEventListener(GameEvent.CHANGE_SCENE, gameEventHandler);
 	}
 	
 	private function gameEventHandler (_event:GameEvent) :Void {
 		switch (_event.type) {
-			case GameEvent.PLAY_LEVEL:
-				if (!level.active) {
-					level.activate();
-					endGameTimer = Timer.delay(callback(checkEndGame), 1500);
-				}
-				else {
-					endGameTimer.stop();
-					level.reset();
-				}
-			case GameEvent.RESET_LEVEL:
-				endGameTimer.stop();
-				level.reset(true);
-				inventory.reset();
-			case GameEvent.PLACE_ITEM:
-				var _invObject:InvObject = inventory.getSelected();
-				if (inventory.useItem(_invObject))
-					level.placeItem(_invObject, _event.data);
-			case GameEvent.REMOVE_ITEM:
-				var _entity:LevelEntity = cast(_event.data, LevelEntity);
-				if (inventory.putBackItem(_entity.type, _entity.variant))
-					level.removeItem(_entity);
-			case GameEvent.SHEEP_DIED, GameEvent.SHEEP_ARRIVED, GameEvent.BOMB_EXPLODED:
-				//trace("END GAME EVENT: " + _event.type.toUpperCase());
-				checkEndGame(false);
+			case GameEvent.CHANGE_SCENE:
+				//trace("CHANGE_SCENE " + _event.data.scene + " / " + _event.data.param);
+				changeScene(_event.data.scene, _event.data.param);
 		}
+	}
+	
+	private function changeScene (_scene:GameScene, ?_param:Dynamic) :Void {
+		// Destroy current scene
+		if (scene != null)	scene.destroy();
+		// Default scene
+		if (_scene == null)	_scene = GameScene.startMenu;
+		// Create new scene
+		scene = switch (_scene) {
+			case GameScene.startMenu: new StartMenu();
+			case GameScene.levelSelect: new LevelSelect();
+			case GameScene.play: new Play(_param);
+		}
+		/*// TODO Play music
+		if (scene.theme != null)
+			playTheme(scene.theme);*/
 	}
 	
 	private function enterFrameHandler (_event:Event) :Void {
 		// Check if it's time to update the game (a frame has passed)
-		//var _diff:Float = Date.now().getTime() - lastFrame;
-		//trace(_diff + " / " + MS);
 		if (Date.now().getTime() - lastFrame >= MS) {
 			update();
 			lastFrame = Date.now().getTime();
@@ -155,8 +128,9 @@ class Game extends Sprite
 	}
 	
 	private function update () :Void {
+		if (scene == null)	return;
 		// Update every entity
-		for (_entity in entities)
+		for (_entity in scene.children)
 			_entity.update();
 		// Call the draw function
 		draw();
@@ -166,7 +140,7 @@ class Game extends Sprite
 		// Reset the display data
 		canvasData.fillRect(canvasData.rect, 0xE7E7E7);
 		// Draw entities
-		for (_entity in entities) {
+		for (_entity in scene.children) {
 			drawEntity(_entity);
 		}
 	}
@@ -222,7 +196,7 @@ class Game extends Sprite
 	private function clickHandler (_event:MouseEvent) :Void {
 		// Search targets
 		var _point:Point = new Point(Std.int(_event.stageX / SCALE), Std.int(_event.stageY / SCALE));
-		var _targets:Array<Entity> = getEntitiesAt(entities[0], Std.int(_point.x), Std.int(_point.y));
+		var _targets:Array<Entity> = getEntitiesAt(scene, Std.int(_point.x), Std.int(_point.y));
 		//trace("clickHandler: " + _targets);
 		if (_targets.length > 0) {
 			var _target:Entity = _targets.pop();
@@ -242,7 +216,6 @@ class Game extends Sprite
 	private function getEntitiesAt (_entity:Entity, _x:Int, _y:Int) :Array<Entity> {
 		var _targets:Array<Entity> = new Array<Entity>();
 		if (_entity.hitTestPoint(new Point(_x, _y))) {
-			//trace(Type.getClass(_entity));
 			_targets.push(_entity);
 		}
 		for (_e in _entity.children) {
@@ -251,50 +224,13 @@ class Game extends Sprite
 		return _targets;
 	}
 	
-	private function checkEndGame (_fromTimer:Bool = true) :Void {
-		//trace(level.endGameEntities);
-		endGameTimer.stop();
-		var _endGame:Bool = true;
-		var _forceEndGame:Bool = false;
-		var _victory:Bool = true;
-		var _reason:String = "not all sheep arrived";
-		for (_e in level.endGameEntities) {
-			if (_e.type == LEType.sheep) {
-				//trace("sheep state: " + cast(_e, Sheep).state);
-				switch (cast(_e, Sheep).state) {
-					case SheepState.dead:
-						_reason = "dead sheep";
-						_forceEndGame = _fromTimer;// Delay end game with timer
-						_victory = false;
-					case SheepState.asleep:
-						if (!_fromTimer) _endGame = false;// Verification is not coming from the timer
-						_victory = false;
-					case SheepState.moving:
-						_endGame = false;// Sheep still moving
-						_victory = false;
-					case SheepState.arrived: {}
-				}
-			}
-			else if (_e.type == LEType.bomb) {
-				//trace("bomb active: " + _e.active);
-				if (_e.active)	_endGame = false;// Bomb still active
-			}
-		}
-		//trace("END GAME: " + _endGame + " / VICTORY: " + _victory);
-		if (_endGame || _forceEndGame)	endGame(_victory, _reason);
-		else							endGameTimer = Timer.delay(callback(checkEndGame), 1500);
-	}
-	
-	private function endGame (_victory:Bool, _reason:String) :Void {
-		// TODO Stop updating level and entities
-		level.paused = true;
-		if (_victory)	trace("VICTORY!");
-		else			trace("FAIL! " + _reason.toUpperCase());
-		//
-	}
-	
 }
 
+enum GameScene {
+	startMenu;
+	levelSelect;
+	play;
+}
 
 
 

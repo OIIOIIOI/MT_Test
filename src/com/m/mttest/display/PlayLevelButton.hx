@@ -20,10 +20,10 @@ class PlayLevelButton extends Button
 		
 		var _anim:Animation;
 		_anim = new Animation(PLAY, "tiles");
-		_anim.addFrame(new AnimFrame("play_level"));
+		_anim.addFrame(new AnimFrame("play_level_on"));
 		anims.push(_anim);
 		_anim = new Animation(STOP, "tiles");
-		_anim.addFrame(new AnimFrame("stop_level"));
+		_anim.addFrame(new AnimFrame("stop_level_on"));
 		anims.push(_anim);
 		
 		play(PLAY);

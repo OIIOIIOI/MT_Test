@@ -3,6 +3,7 @@ package com.m.mttest.levels;
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.anim.FrameManager;
+import com.m.mttest.display.BitmapText;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.InvEntity;
 import com.m.mttest.entities.LevelEntity;
@@ -17,25 +18,39 @@ import flash.errors.Error;
 class Inventory extends Entity
 {
 	
+	static public var IDLE:String = "idle";
+	
 	private var invData:BitmapData;
 	private var list:Array<InvObject>;
 	private var index:Int;
 	
 	private var slots:Entity;
+	private var itemName:BitmapText;
 	
 	public function new () {
 		super();
-		
-		slots = new Entity();
-		addChild(slots);
 	}
 	
 	public function load (_name:String) :Void {
 		// Get level data
 		invData = FrameManager.getFrame(_name, "levels");
 		if (invData == null)
-			throw new Error("The inventory \"" + _name + "\" was found");
-		//
+			throw new Error("The inventory \"" + _name + "\" was not found");
+		// Background
+		var _anim:Animation;
+		_anim = new Animation(IDLE, "tiles");
+		if (invData.width <= 4)	_anim.addFrame(new AnimFrame("bg_inventory0"));
+		else					_anim.addFrame(new AnimFrame("bg_inventory1"));
+		anims.push(_anim);
+		play(IDLE);
+		// Container
+		slots = new Entity();
+		addChild(slots);
+		// Name
+		itemName = new BitmapText("...", "font_m_mini");
+		itemName.y = height + 4;
+		addChild(itemName);
+		// Parse data
 		parse();
 	}
 	
@@ -65,8 +80,6 @@ class Inventory extends Entity
 				else				list[_indexOf].count++;
 			}
 		}
-		width = 20;
-		color = 0xFFE6D373;
 		refresh();
 		//trace("inventory: " + list);
 	}
@@ -74,18 +87,28 @@ class Inventory extends Entity
 	private function refresh () :Void {
 		if (slots.numChildren == 0) {
 			var _slot:InvSlot;
-			for (_i in 0...list.length) {
+			var _count:Int = (invData.width <= 4) ? 4 : 8;
+			for (_i in 0..._count) {
 				_slot = new InvSlot(this);
-				_slot.x = 1;
-				_slot.y = _i * (_slot.height + 1) + 1;
+				_slot.x = Std.int(_i / 4) * (_slot.width + 1) + 4;
+				_slot.y = (_i % 4) * (_slot.height + 1) + 4;
 				slots.addChild(_slot);
-				if (height == 1)	height = list.length * (_slot.height + 1) + 1;
 			}
 		}
 		for (_i in 0...slots.numChildren) {
 			cast(slots.getChildAt(_i), InvSlot).display(null);
 			slots.getChildAt(_i).play(InvSlot.OFF);
 		}
+		// One-for-one method
+		var _index:Int = 0;
+		for (_i in 0...list.length) {
+			for (_j in 0...(list[_i].count - list[_i].used)) {
+				cast(slots.getChildAt(_index), InvSlot).listIndex = _i;
+				cast(slots.getChildAt(_index), InvSlot).display(list[_i].type, list[_i].variant);
+				_index++;
+			}
+		}
+		/*// Stacking method
 		var _index:Int = 0;
 		for (_i in 0...list.length) {
 			if (list[_i].count > list[_i].used) {
@@ -93,7 +116,7 @@ class Inventory extends Entity
 				cast(slots.getChildAt(_index), InvSlot).display(list[_i].type, list[_i].variant);
 				_index++;
 			}
-		}
+		}*/
 		// If at least one slot is full, select the first one
 		if (_index > 0) {
 			slots.getChildAt(0).play(InvSlot.ON);
@@ -144,12 +167,13 @@ class Inventory extends Entity
 		return true;
 	}
 	
-	public function entityClickHandler (_target:Entity) :Void {
+	public function entityClickHandler (_target:InvSlot) :Void {
 		//trace("entityClickHandler: " + _target);
 		if (index != -1)
 			slots.getChildAt(index).play(InvSlot.OFF);
 		index = slots.getChildIndex(_target);
 		_target.play(InvSlot.ON);
+		itemName.text = LevelEntity.typeToName(list[index].type, list[index].variant);
 	}
 	
 }

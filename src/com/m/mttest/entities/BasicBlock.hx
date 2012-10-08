@@ -4,6 +4,7 @@ import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.levels.Level;
+import flash.geom.Rectangle;
 
 /**
  * ...
@@ -25,9 +26,6 @@ class BasicBlock extends LevelEntity
 		}
 		else if (_type == blocked) {
 			_anim.addFrame(new AnimFrame("seed" + Std.random(2)));
-		}
-		else if (_type == hole) {
-			_anim.addFrame(new AnimFrame("hole"));
 		}
 		else if (_type == floor) {
 			_anim.addFrame(new AnimFrame("grass" + Std.random(8)));

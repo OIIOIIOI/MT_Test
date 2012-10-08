@@ -22,7 +22,7 @@ class Interface extends Entity
 		playButton = new PlayLevelButton(this);
 		
 		resetButton = new ResetLevelButton(this);
-		resetButton.y = 16;
+		resetButton.y = playButton.height + 1;
 		
 		addChild(playButton);
 		addChild(resetButton);

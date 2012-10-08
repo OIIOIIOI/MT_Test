@@ -1,10 +1,12 @@
 package com.m.mttest;
 
 import com.m.mttest.anim.FrameManager;
+import com.remixtechnology.SWFProfiler;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
 import flash.events.Event;
 import flash.Lib;
+import flash.ui.ContextMenu;
 
 /**
  * ...
@@ -14,7 +16,11 @@ import flash.Lib;
 @:bitmap("res/tiles.png") class TilesSheet extends flash.display.BitmapData { }
 @:bitmap("res/levels.png") class LevelsSheet extends flash.display.BitmapData { }
 @:bitmap("res/font_volter.png") class FontVolterSheet extends flash.display.BitmapData { }
+@:bitmap("res/font_m_mini.png") class FontmMiniSheet extends flash.display.BitmapData { }
 @:bitmap("res/font_superscript.png") class FontSuperscriptSheet extends flash.display.BitmapData { }
+@:bitmap("res/font_numbers_red.png") class FontNumbersRedSheet extends flash.display.BitmapData { }
+@:bitmap("res/font_numbers_blue.png") class FontNumbersBlueSheet extends flash.display.BitmapData { }
+@:bitmap("res/font_numbers_gold.png") class FontNumbersGoldSheet extends flash.display.BitmapData { }
 
 class Main
 {
@@ -29,9 +35,20 @@ class Main
 		FrameManager.store("tiles", new TilesSheet(0, 0), haxe.Resource.getString("tilesJson"));
 		FrameManager.store("levels", new LevelsSheet(0, 0), haxe.Resource.getString("levelsJson"));
 		FrameManager.store("font_volter", new FontVolterSheet(0, 0), haxe.Resource.getString("fontVolterJson"));
+		FrameManager.store("font_m_mini", new FontmMiniSheet(0, 0), haxe.Resource.getString("fontmMiniJson"));
 		FrameManager.store("font_superscript", new FontSuperscriptSheet(0, 0), haxe.Resource.getString("fontSuperscriptJson"));
+		FrameManager.store("font_numbers_red", new FontNumbersRedSheet(0, 0), haxe.Resource.getString("fontNumbersJson"));
+		FrameManager.store("font_numbers_blue", new FontNumbersBlueSheet(0, 0), haxe.Resource.getString("fontNumbersJson"));
+		FrameManager.store("font_numbers_gold", new FontNumbersGoldSheet(0, 0), haxe.Resource.getString("fontNumbersJson"));
 		// Create and add game
 		Lib.current.stage.addChild(new Game());
+		// Profiler and context menu
+		#if debug
+		SWFProfiler.init();
+		#else
+		Lib.current.contextMenu = new ContextMenu();
+		Lib.current.contextMenu.hideBuiltInItems();
+		#end
 	}
 	
 }

@@ -24,6 +24,7 @@ class Sheep extends LevelEntity
 	static public var IDLE:String = "idle";
 	static public var JUMP:String = "jump";
 	static public var MOVING:String = "moving";
+	static public var FALL:String = "fall";
 	static public var DEAD:String = "dead";
 	
 	public var state (default, null):SheepState;
@@ -32,7 +33,6 @@ class Sheep extends LevelEntity
 	private var speed:Float;
 	private var wait:Bool;
 	private var sleepFX:SleepFX;
-	//private var wakeFX:WakeFX;
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level) {
 		super(_x, _y, _level, LEType.sheep);
@@ -42,7 +42,7 @@ class Sheep extends LevelEntity
 		speed = 0.8;
 		wait = true;
 		
-		hitBox = new Rectangle(4, 4, 8, 8);
+		hitBox = new Rectangle(6, 6, 4, 4);
 		//drawHitBox = true;
 		
 		var _anim:Animation;
@@ -58,6 +58,19 @@ class Sheep extends LevelEntity
 		_anim.addFrame(new AnimFrame("sheep_jump"));
 		_anim.addFrame(new AnimFrame("sheep0"));
 		_anim.addFrame(new AnimFrame("sheep0"));
+		_anim.fps = 10;
+		anims.push(_anim);
+		_anim = new Animation(FALL, "tiles");
+		_anim.addFrame(new AnimFrame("sheep_fall0"));
+		_anim.addFrame(new AnimFrame("sheep_fall1"));
+		_anim.addFrame(new AnimFrame("sheep_fall0"));
+		_anim.addFrame(new AnimFrame("sheep_fall1"));
+		_anim.addFrame(new AnimFrame("sheep_fall0"));
+		_anim.addFrame(new AnimFrame("sheep_fall0"));
+		_anim.addFrame(new AnimFrame("sheep_fall0"));
+		_anim.addFrame(new AnimFrame("sheep_fall2"));
+		_anim.addFrame(new AnimFrame("sheep_fall3"));
+		_anim.looping = false;
 		_anim.fps = 10;
 		anims.push(_anim);
 		_anim = new Animation(DEAD, "tiles");
@@ -87,14 +100,10 @@ class Sheep extends LevelEntity
 			if (path != null) {
 				// FX
 				removeChild(sleepFX);
-				/*wakeFX = new WakeFX();
-				wakeFX.x = 6;
-				wakeFX.y = -12;
-				addChild(wakeFX);*/
 				state = SheepState.moving;
 				// Anim
 				play(JUMP);
-				Timer.delay(function () { if (active) { wait = false; /*removeChild(wakeFX);*/ play(MOVING); } }, 600);
+				Timer.delay(function () { if (active) { wait = false; play(MOVING); } }, 600);
 			}
 		}
 		// If a path was found, move on
@@ -160,12 +169,22 @@ class Sheep extends LevelEntity
 		super.blowUp(_power);
 	}
 	
+	public function fall () :Void {
+		if (state != SheepState.fallen) {
+			state = SheepState.fallen;
+			active = false;
+			play(FALL);
+			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SHEEP_DIED));
+		}
+	}
+	
 }
 
 enum SheepState {
 	asleep;
 	moving;
 	arrived;
+	fallen;
 	dead;
 }
 

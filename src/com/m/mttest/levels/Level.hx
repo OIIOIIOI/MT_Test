@@ -1,10 +1,13 @@
 package com.m.mttest.levels;
 
 import com.m.mttest.anim.FrameManager;
+import com.m.mttest.entities.BasicBlock;
 import com.m.mttest.entities.Blast;
 import com.m.mttest.entities.Bomb;
+import com.m.mttest.entities.Border;
 import com.m.mttest.entities.Emitter;
 import com.m.mttest.entities.Entity;
+import com.m.mttest.entities.Hole;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.entities.Sheep;
 import com.m.mttest.entities.Wall;
@@ -34,7 +37,7 @@ class Level extends Entity, implements IAStarClient
 	private var sceneLayer:Entity;
 	private var itemsLayer:Entity;
 	private var sheepLayer:Entity;
-	private var blastsLayer:Entity;
+	private var collisionLayer:Entity;
 	public var emitter (default, null):Emitter;
 	// A* variables
 	public var rowTotal (default, null):Int;
@@ -57,13 +60,13 @@ class Level extends Entity, implements IAStarClient
 		sceneLayer = new Entity();
 		itemsLayer = new Entity();
 		sheepLayer = new Entity();
-		blastsLayer = new Entity();
+		collisionLayer = new Entity();
 		emitter = new Emitter();
 		//
 		addChild(sceneLayer);
 		addChild(itemsLayer);
+		addChild(collisionLayer);
 		addChild(sheepLayer);
-		addChild(blastsLayer);
 		addChild(emitter);
 		//
 		blasts = new Hash<String>();
@@ -76,7 +79,8 @@ class Level extends Entity, implements IAStarClient
 		// Get level data
 		levelData = FrameManager.getFrame(_name, "levels");
 		if (levelData == null)
-			throw new Error("The level \"" + _name + "\" was found");
+			throw new Error("The level \"" + _name + "\" was not found");
+		levelData = addBorders(levelData);
 		//
 		userData = new BitmapData(levelData.width, levelData.height, false, 0xFFFFFFFF);
 		// Parse data
@@ -84,13 +88,34 @@ class Level extends Entity, implements IAStarClient
 		// Init basic properties
 		width = Std.int(levelData.width / 2) * Game.TILE_SIZE;
 		height = Std.int(levelData.height / 2) * Game.TILE_SIZE;
-		color = 0xFFFFFFFF;
+		//color = 0xFFFFFFFF;
 		// A* init and paths lookups
 		colTotal = Std.int(levelData.width / 2);
 		rowTotal = Std.int(levelData.height / 2);
 		// Check if the map is playable
 		if (!checkPaths())
 			throw new Error("The level \"" + _name + "\" is not playable");
+	}
+	
+	private function addBorders (_data:BitmapData) :BitmapData {
+		var _returnData:BitmapData = new BitmapData(_data.width + 4, _data.height + 4, false, 0x660066);
+		// Corners
+		_returnData.setPixel(0, 1, 0x000007);
+		_returnData.setPixel(_returnData.width - 2, 1, 0x000001);
+		_returnData.setPixel(0, _returnData.height - 1, 0x000005);
+		_returnData.setPixel(_returnData.width - 2, _returnData.height - 1, 0x000003);
+		// Sides
+		for (_y in 1...Std.int(_returnData.height / 2) - 1) {
+			_returnData.setPixel(0, _y * 2 + 1, 0x000006);
+			_returnData.setPixel(_returnData.width - 2, _y * 2 + 1, 0x000002);
+		}
+		// Bottom
+		for (_x in 1...Std.int(_returnData.width / 2) - 1) {
+			_returnData.setPixel(_x * 2, _returnData.height - 1, 0x000004);
+		}
+		// Level data
+		_returnData.copyPixels(_data, _data.rect, new Point(2, 2));
+		return _returnData;
 	}
 	
 	private function checkPaths () :Bool {
@@ -132,9 +157,9 @@ class Level extends Entity, implements IAStarClient
 			sheepLayer.getChildAt(0).destroy();
 			sheepLayer.removeChildAt(0);
 		}
-		while (blastsLayer.numChildren > 0) {
-			blastsLayer.getChildAt(0).destroy();
-			blastsLayer.removeChildAt(0);
+		while (collisionLayer.numChildren > 0) {
+			collisionLayer.getChildAt(0).destroy();
+			collisionLayer.removeChildAt(0);
 		}
 		blasts = new Hash<String>();
 		blownUpTiles = new Array<BlowUpInfo>();
@@ -159,11 +184,14 @@ class Level extends Entity, implements IAStarClient
 			for (_x in 0...Std.int(_bitmapData.width / 2)) {
 				// Floor
 				_color = _bitmapData.getPixel(_x * 2, _y * 2);
+				_variant = _bitmapData.getPixel(_x * 2, _y * 2 + 1);
+				if (_variant == Std.int(_color))	_variant = 0;
 				_floorType = LevelEntity.colorToType(_color);
 				//
 				if (_floorType != null) {
 					_class = LevelEntity.typeToClass(_floorType);
-					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_floorType));
+					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_floorType, _variant));
+					//trace("FLOOR create " + _class + " / " + _params);
 					_entity = Type.createInstance(Type.resolveClass(_class), _params);
 					addEntity(_entity);
 				}
@@ -176,6 +204,7 @@ class Level extends Entity, implements IAStarClient
 				if (_itemType != null && _itemType != _floorType) {
 					_class = LevelEntity.typeToClass(_itemType);
 					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_itemType, _variant));
+					//trace("ITEM create " + _class + " / " + _params);
 					_entity = Type.createInstance(Type.resolveClass(_class), _params);
 					_entity.userPlaced = (_bitmapData == userData);
 					addEntity(_entity);
@@ -193,8 +222,11 @@ class Level extends Entity, implements IAStarClient
 				itemsLayer.addChild(_entity);
 				endGameEntities.push(_entity);
 				updateMap();
+			case LEType.hole:
+				collisionLayer.addChild(_entity);
+				updateMap();
 			case LEType.blast:
-				blastsLayer.addChild(_entity);
+				collisionLayer.addChild(_entity);
 			default:
 				sceneLayer.addChild(_entity);
 		}
@@ -207,6 +239,9 @@ class Level extends Entity, implements IAStarClient
 			case LEType.bomb:
 				_entity.parent.removeChild(_entity);
 				endGameEntities.remove(_entity);
+				updateMap();
+			case LEType.hole:
+				_entity.parent.removeChild(_entity);
 				updateMap();
 			case LEType.sheep:
 				_entity.parent.removeChild(_entity);
@@ -230,7 +265,7 @@ class Level extends Entity, implements IAStarClient
 		for (_e in sheepLayer.children) {
 			cast(_e, LevelEntity).activate();
 		}
-		for (_e in blastsLayer.children) {
+		for (_e in collisionLayer.children) {
 			cast(_e, LevelEntity).activate();
 		}
 	}
@@ -287,6 +322,10 @@ class Level extends Entity, implements IAStarClient
 			if (_e.hitTestPoint(new Point(_point.x, _point.y), false))
 				_targets.push(cast(_e, LevelEntity));
 		}
+		for (_e in collisionLayer.children) {
+			if (_e.hitTestPoint(new Point(_point.x, _point.y), false))
+				_targets.push(cast(_e, LevelEntity));
+		}
 		return _targets;
 	}
 	
@@ -321,10 +360,16 @@ class Level extends Entity, implements IAStarClient
 		var _sheep:Sheep;
 		for (_s in sheepLayer.children) {
 			_sheep = cast(_s, Sheep);
-			if (_sheep.state != SheepState.dead) {
-				for (_b in blastsLayer.children) {
+			if (_sheep.state != SheepState.dead && _sheep.state != SheepState.fallen) {
+				for (_b in collisionLayer.children) {
 					if (_sheep.hitTestRect(_b.absHitBox)) {
-						_sheep.blowUp();
+						if (Std.is(_b, Blast))
+							_sheep.blowUp();
+						else if (Std.is(_b, Hole)) {
+							_sheep.x = _b.x;
+							_sheep.y = _b.y;
+							_sheep.fall();
+						}
 						break;
 					}
 				}

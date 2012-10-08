@@ -2,6 +2,7 @@ package com.m.mttest.entities;
 
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
+import com.m.mttest.display.BitmapText;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.Game;
 import com.m.mttest.levels.Inventory;
@@ -27,7 +28,7 @@ class InvEntity extends Entity
 		variant = _variant;
 		inventory = _inventory;
 		
-		x = y = 1;
+		x = y = 2;
 		width = height = Game.TILE_SIZE;
 		color = 0xFF000000 + LevelEntity.typeToColor(_type);
 		
@@ -42,7 +43,7 @@ class InvEntity extends Entity
 	}
 	
 	override public function clickHandler () :Void {
-		inventory.entityClickHandler(this.parent);
+		inventory.entityClickHandler(cast(this.parent, InvSlot));
 		//trace("clicked " + this + " (" + type + ")");
 	}
 	
@@ -51,7 +52,8 @@ class InvEntity extends Entity
 		if (_type == LEType.bomb) {
 			var _timer:Int = _variant % 256;
 			if (_timer > 0) {
-				_extra = new NumberDisplay(_timer);
+				_extra = new BitmapText(Std.string(_timer), "font_numbers_red");
+				_extra.mouseEnabled = false;
 				_extra.x = Game.TILE_SIZE - _extra.width - 1;
 				_extra.y = Game.TILE_SIZE - _extra.height - 1;
 			}
@@ -71,6 +73,7 @@ class InvEntity extends Entity
 			case wall:				"wall0";
 			case rock:				"rock0";
 			case blast:				"blast3";
+			case border:			"border_bottom";
 		}
 	}
 	

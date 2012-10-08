@@ -19,7 +19,7 @@ class ResetLevelButton extends Button
 		
 		var _anim:Animation;
 		_anim = new Animation(RESET, "tiles");
-		_anim.addFrame(new AnimFrame("reset_level"));
+		_anim.addFrame(new AnimFrame("reset_level_on"));
 		anims.push(_anim);
 		
 		play(RESET);

@@ -10,6 +10,7 @@ import flash.events.Event;
 class GameEvent extends Event
 {
 	
+	inline static public var CHANGE_SCENE:String = "change_scene";
 	inline static public var PLAY_LEVEL:String = "play_level";
 	inline static public var RESET_LEVEL:String = "reset_level";
 	inline static public var PLACE_ITEM:String = "place_item";

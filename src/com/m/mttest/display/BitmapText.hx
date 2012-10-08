@@ -125,6 +125,7 @@ class BitmapText extends Entity
 			}
 			_entity = new Entity();
 			setAnimations(_entity, _prefix + _c);
+			_entity.mouseEnabled = false;
 			_entity.play("idle");
 			
 			_entity.x = _pos;
@@ -136,8 +137,11 @@ class BitmapText extends Entity
 			var _offsetNext:Point = new Point();
 			if (OFFSETS_NEXT.exists(_prefix + _c))	_offsetNext = OFFSETS_NEXT.get(_prefix + _c);
 			_pos += (_frame.width + CHAR_SPACE + _frameOffset + Std.int(_offsetNext.x)) * scale;
+			width = _pos;
+			if (_frame.height * scale > height)	height = _frame.height * scale;
 			addChild(_entity);
 		}
+		width += scale;
 	}
 	
 	private function findPrefix (_c:String) :String {
@@ -178,6 +182,16 @@ class BitmapText extends Entity
 				for (_i in 0...10) {
 					OFFSETS_NEXT.set("number_" + _i, new Point(-1));
 				}
+			case "font_m_mini":
+				CHAR_SPACE = 1;
+				WORD_SPACE = 2;
+				OFFSETS = new Hash<Point>();
+				OFFSETS_NEXT = new Hash<Point>();
+			case "font_numbers_red", "font_numbers_blue", "font_numbers_gold":
+				CHAR_SPACE = -1;
+				WORD_SPACE = 3;
+				OFFSETS = new Hash<Point>();
+				OFFSETS_NEXT = new Hash<Point>();
 			default:
 				CHAR_SPACE = 1;
 				WORD_SPACE = 3;

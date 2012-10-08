@@ -2,6 +2,7 @@ package com.m.mttest.entities;
 
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
+import com.m.mttest.display.BitmapText;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.events.EventManager;
 import com.m.mttest.events.GameEvent;
@@ -25,12 +26,12 @@ class Bomb extends LevelEntity
 	static public var ON:String = "on";
 	static public var BOOM:String = "boom";
 	
-	static private var DELAY:Int = 1100;
+	static private var DELAY:Int = 1200;
 	
 	public var state (default, null):BombState;
 	
 	private var size:Int;
-	private var number:NumberDisplay;
+	private var number:BitmapText;
 	private var timer:Int;
 	private var left:Int;
 	private var startTime:Float;
@@ -40,13 +41,15 @@ class Bomb extends LevelEntity
 		
 		state = normal;
 		// Extract params from variant color
+		variant = _variant;
 		size = Math.floor(_variant / 256);
 		timer = _variant % 256;
 		//
 		left = timer;
 		// Add timer entity
 		if (timer > 0) {
-			number = new NumberDisplay(timer);
+			number = new BitmapText(Std.string(timer), "font_numbers_red");
+			number.mouseEnabled = false;
 			number.x = width - number.width - 1;
 			number.y = height - number.height - 1;
 			addChild(number);
@@ -67,9 +70,9 @@ class Bomb extends LevelEntity
 		play(IDLE);
 	}
 	
-	override private function getVariant () :Int {
+	/*override private function getVariant () :Int {
 		return (size * 256 + timer);
-	}
+	}*/
 	
 	override public function activate () :Void {
 		startTime = Date.now().getTime();
@@ -86,7 +89,7 @@ class Bomb extends LevelEntity
 				if (left == 1)
 					addFX(new ColorBlinkFX(-1, new ColorTransform(1, 1, 1, 1, 255, 255, 255), null, 18), false);
 				if (left > 0 && number != null) {
-					number.play("number" + left);
+					number.text = Std.string(left);
 					number.x = width - number.width - 1;
 					number.y = height - number.height - 1;
 				}
@@ -114,6 +117,13 @@ class Bomb extends LevelEntity
 		super.blowUp(_power);
 		
 		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.BOMB_EXPLODED));
+	}
+	
+	static public function getName (_variant:Int = 0) :String {
+		var _name:String = "Bomb";
+		if (Math.floor(_variant / 256) > 0)	_name = "Big Bomb";
+		if (_variant % 256 > 0)	_name = "Timed " + _name;
+		return _name;
 	}
 	
 }

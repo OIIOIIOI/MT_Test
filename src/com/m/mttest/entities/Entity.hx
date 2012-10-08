@@ -192,10 +192,12 @@ class Entity
 	
 	public function getAbsHitBox () :Rectangle {
 		var _rect:Rectangle = absRect.clone();
-		_rect.x += hitBox.x;
-		_rect.y += hitBox.y;
-		_rect.width = hitBox.width;
-		_rect.height = hitBox.height;
+		if (hitBox != null) {
+			_rect.x += hitBox.x;
+			_rect.y += hitBox.y;
+			_rect.width = hitBox.width;
+			_rect.height = hitBox.height;
+		}
 		return _rect;
 	}
 	
@@ -299,6 +301,13 @@ class Entity
 		if (bitmapData != null) {
 			bitmapData.dispose();
 			bitmapData = null;
+		}
+		var _e:Entity;
+		while (numChildren > 0) {
+			_e = getChildAt(0);
+			removeChild(_e);
+			_e.destroy();
+			_e = null;
 		}
 	}
 	
