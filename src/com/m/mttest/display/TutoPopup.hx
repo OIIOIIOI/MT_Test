@@ -99,6 +99,26 @@ class TutoPopup extends Entity
 					EventManager.instance.dispatchEvent(new GameEvent(GameEvent.EXIT_TUTO));
 				}
 			}
+			case Tuto.tutoBigBomb:
+			{
+				if (step == 0) {
+					_e = new FastEntity("tuto_big_bomb", "tutos");
+					mainLayer.addChild(_e);
+				}
+				else {
+					EventManager.instance.dispatchEvent(new GameEvent(GameEvent.EXIT_TUTO));
+				}
+			}
+			case Tuto.tutoChain:
+			{
+				if (step == 0) {
+					_e = new FastEntity("tuto_chain", "tutos");
+					mainLayer.addChild(_e);
+				}
+				else {
+					EventManager.instance.dispatchEvent(new GameEvent(GameEvent.EXIT_TUTO));
+				}
+			}
 		}
 	}
 	
@@ -109,4 +129,6 @@ enum Tuto {
 	tutoTime;
 	tutoRock;
 	tutoHole;
+	tutoBigBomb;
+	tutoChain;
 }

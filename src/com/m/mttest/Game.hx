@@ -73,9 +73,9 @@ class Game extends Sprite
 			LEVELS.push( { name:"level_diag", locked:false, tuto:null } );
 			LEVELS.push( { name:"tuto_hole", locked:false, tuto:Tuto.tutoHole } );
 			LEVELS.push( { name:"level_minefield", locked:false, tuto:null } );
-			LEVELS.push( { name:"tuto_big", locked:false, tuto:null } );
+			LEVELS.push( { name:"tuto_big", locked:false, tuto:Tuto.tutoBigBomb } );
 			LEVELS.push( { name:"level_big_time", locked:false, tuto:null } );
-			LEVELS.push( { name:"tuto_chain", locked:false, tuto:null } );
+			LEVELS.push( { name:"tuto_chain", locked:false, tuto:Tuto.tutoChain } );
 			LEVELS.push( { name:"level_mayhem", locked:false, tuto:null } );
 			LEVELS.push( { name:"level_heart", locked:false, tuto:null } );
 			//LEVELS.push( { name:"sandbox", locked:false, tuto:null } );

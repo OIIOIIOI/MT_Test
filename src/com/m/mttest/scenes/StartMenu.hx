@@ -52,18 +52,18 @@ class StartMenu extends Scene
 			addChild(_s);
 		}
 		// Play
-		levelSelect = new Button(999, ButtonType.startStop);
+		levelSelect = new Button(24, ButtonType.startStop);
 		levelSelect.x = (Game.SIZE.width / Game.SCALE - levelSelect.width) /2;
 		levelSelect.y = (Game.SIZE.height / Game.SCALE - levelSelect.height) * 0.8;
 		levelSelect.customClickHandler = entitiesClickHandler;
 		addChild(levelSelect);
 		// Play label
-		var _label:BitmapText = new BitmapText("Play");
+		/*var _label:BitmapText = new BitmapText("Play");
 		_label.mouseEnabled = false;
 		_label.x = levelSelect.height + 2;
 		_label.y = (levelSelect.height - _label.height) / 2;
 		_label.addFX(new ColorFX(-1, new ColorTransform(0, 0, 0, 1, 80, 50, 25)), true, true);
-		levelSelect.addChild(_label);
+		levelSelect.addChild(_label);*/
 		// Mute
 		/*sound = new Button(24, ButtonType.sound);
 		sound.x = Game.SIZE.width / Game.SCALE - sound.width - 8;
