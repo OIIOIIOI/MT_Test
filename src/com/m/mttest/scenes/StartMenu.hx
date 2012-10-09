@@ -2,6 +2,8 @@ package com.m.mttest.scenes;
 
 import com.m.mttest.display.BitmapText;
 import com.m.mttest.display.Button;
+import com.m.mttest.display.FastEntity;
+import com.m.mttest.entities.DisplaySheep;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.events.EventManager;
 import com.m.mttest.events.GameEvent;
@@ -17,16 +19,42 @@ import flash.geom.ColorTransform;
 class StartMenu extends Scene
 {
 	
+	private var logo:FastEntity;
 	private var levelSelect:Button;
-	private var sound:Button;
+	//private var sound:Button;
+	private var credits:FastEntity;
 	
 	public function new () {
 		super();
 		
+		// Logo
+		logo = new FastEntity("title_logo");
+		logo.x = (Game.SIZE.width / Game.SCALE - logo.width) /2;
+		logo.y = 24;
+		addChild(logo);
+		// Sheep
+		var _sheep:DisplaySheep;
+		var _sheepArray:Array<DisplaySheep> = new Array<DisplaySheep>();
+		//for (_i in 0...7) {
+		for (_i in 0...Std.random(11) + 1) {
+			_sheep = new DisplaySheep();
+			_sheep.x = (Game.SIZE.width / Game.SCALE / 2) + Std.random(200) - 100;
+			_sheep.y = 48 + Std.random(10);
+			switch (Std.random(3)) {
+				default:	_sheep.play(DisplaySheep.IDLE);
+				case 0:	_sheep.play(DisplaySheep.JUMP);
+				case 1:	_sheep.play(DisplaySheep.MOVING);
+			}
+			_sheepArray.push(_sheep);
+		}
+		_sheepArray.sort(zSorting);
+		for (_s in _sheepArray) {
+			addChild(_s);
+		}
 		// Play
-		levelSelect = new Button(999, ButtonType.levelSelect);
+		levelSelect = new Button(999, ButtonType.startStop);
 		levelSelect.x = (Game.SIZE.width / Game.SCALE - levelSelect.width) /2;
-		levelSelect.y = (Game.SIZE.height / Game.SCALE - levelSelect.height) * 0.66;
+		levelSelect.y = (Game.SIZE.height / Game.SCALE - levelSelect.height) * 0.8;
 		levelSelect.customClickHandler = entitiesClickHandler;
 		addChild(levelSelect);
 		// Play label
@@ -37,18 +65,28 @@ class StartMenu extends Scene
 		_label.addFX(new ColorFX(-1, new ColorTransform(0, 0, 0, 1, 80, 50, 25)), true, true);
 		levelSelect.addChild(_label);
 		// Mute
-		sound = new Button(24, ButtonType.sound);
+		/*sound = new Button(24, ButtonType.sound);
 		sound.x = Game.SIZE.width / Game.SCALE - sound.width - 8;
 		sound.y = Game.SIZE.height / Game.SCALE - sound.height - 8;
 		sound.customClickHandler = entitiesClickHandler;
-		addChild(sound);
+		addChild(sound);*/
+		credits = new FastEntity("credit");
+		credits.x = (Game.SIZE.width / Game.SCALE - credits.width) / 2;
+		credits.y = Game.SIZE.height / Game.SCALE - credits.height - 4;
+		addChild(credits);
+	}
+	
+	private function zSorting (_e1:DisplaySheep, _e2:DisplaySheep) :Int {
+		if (_e1.y > _e2.y)		return 1;
+		else if (_e1.y < _e2.y)	return -1;
+		else					return 0;
 	}
 	
 	private function entitiesClickHandler (_target:Entity) :Void {
 		switch (_target) {
 			case cast(levelSelect, Entity):
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.levelSelect } ));
-			case cast(sound, Entity): trace("MUTE");
+			//case cast(sound, Entity): trace("MUTE");
 		}
 	}
 	

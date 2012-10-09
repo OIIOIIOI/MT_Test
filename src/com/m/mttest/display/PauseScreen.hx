@@ -35,24 +35,27 @@ class PauseScreen extends Entity
 		title.y = 12;
 		addChild(title);
 		//
+		var _label:BitmapText;
 		// Sound
-		sound = new Button(999, ButtonType.sound);
+		/*sound = new Button(999, ButtonType.sound);
 		sound.x = (Game.SIZE.width / Game.SCALE - sound.width) /2;
 		sound.y = (Game.SIZE.height / Game.SCALE - (sound.height * 2 + 4)) / 2;
 		sound.customClickHandler = entitiesClickHandler;
 		addChild(sound);
 		// Sound label
-		var _label:BitmapText = new BitmapText("Toggle sound");
+		_label = new BitmapText("Toggle sound");
 		_label.mouseEnabled = false;
 		_label.x = sound.height + 2;
 		_label.y = (sound.height - _label.height) / 2;
 		_label.addFX(new ColorFX(-1, new ColorTransform(0, 0, 0, 1, 80, 50, 25)), true, true);
-		sound.addChild(_label);
+		sound.addChild(_label);*/
 		//
 		// Exit to menu
 		back = new Button(999, ButtonType.levelSelect);
-		back.x = sound.x;
-		back.y = sound.y + sound.height + 4;
+		back.x = (Game.SIZE.width / Game.SCALE - back.width) /2;
+		back.y = (Game.SIZE.height / Game.SCALE - back.height) / 2;
+		//back.x = sound.x;
+		//back.y = sound.y + sound.height + 4;
 		back.customClickHandler = entitiesClickHandler;
 		addChild(back);
 		// Exit label
@@ -68,7 +71,7 @@ class PauseScreen extends Entity
 		switch (_target) {
 			case cast(back, Entity):
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.levelSelect } ));
-			case cast(sound, Entity): trace("MUTE");
+			//case cast(sound, Entity): trace("MUTE");
 		}
 	}
 	

@@ -64,8 +64,8 @@ class LevelEntity extends Entity
 	
 	private function getWalkable () :Bool {
 		return switch (type) {
-			case unbreakable_wall, border: false;
-			case floor, sheep, exit, blast, blocked, hole: true;
+			case unbreakable_wall, border, blocked: false;
+			case floor, sheep, exit, blast, hole: true;
 			case bomb: (level.absoluteSearch || cast(this, Bomb).state == BombState.gone);
 			case wall: (level.absoluteSearch || cast(this, Wall).state == WallState.gone);
 			case rock: (level.absoluteSearch || cast(this, Rock).state == RockState.gone);

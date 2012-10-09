@@ -9,7 +9,7 @@ import com.m.mttest.entities.Entity;
  * @author 01101101
  */
 
-class PlayLevelButton extends Entity
+class PlayLevelIcon extends Entity
 {
 	
 	static public var PLAY:String = "play";

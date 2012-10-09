@@ -1,5 +1,6 @@
 package com.m.mttest;
 
+import com.m.mttest.anim.FrameManager;
 import com.m.mttest.display.BitmapText;
 import com.m.mttest.display.TextLayer;
 import com.m.mttest.display.TutoPopup;
@@ -53,7 +54,8 @@ class Game extends Sprite
 	static public var CURRENT_LEVEL:Int;
 	
 	private var canvas:Bitmap;// The display container
-	private var canvasData:BitmapData;// The display data
+	private var backgroundData:BitmapData;
+	private var canvasData:BitmapData;
 	private var scaledCanvasData:BitmapData;// The display data
 	
 	private var scene:Entity;
@@ -66,15 +68,23 @@ class Game extends Sprite
 		if (LEVELS == null) {
 			LEVELS = new Array<LevelObject>();
 			LEVELS.push( { name:"tuto_start", locked:false, tuto:Tuto.tutoStart } );
-			LEVELS.push( { name:"tuto_time", locked:false, tuto:Tuto.tutoTime } );
 			LEVELS.push( { name:"tuto_rock", locked:false, tuto:Tuto.tutoRock } );
+			LEVELS.push( { name:"tuto_time", locked:false, tuto:Tuto.tutoTime } );
+			LEVELS.push( { name:"level_diag", locked:false, tuto:null } );
 			LEVELS.push( { name:"tuto_hole", locked:false, tuto:Tuto.tutoHole } );
+			LEVELS.push( { name:"level_minefield", locked:false, tuto:null } );
+			LEVELS.push( { name:"tuto_big", locked:false, tuto:null } );
+			LEVELS.push( { name:"level_big_time", locked:false, tuto:null } );
+			LEVELS.push( { name:"tuto_chain", locked:false, tuto:null } );
+			LEVELS.push( { name:"level_mayhem", locked:false, tuto:null } );
+			LEVELS.push( { name:"level_heart", locked:false, tuto:null } );
 			//LEVELS.push( { name:"sandbox", locked:false, tuto:null } );
 		}
 		CURRENT_LEVEL = -1;
 		// Create the empty display data
 		canvasData = new BitmapData(Std.int(SIZE.width / SCALE), Std.int(SIZE.height / SCALE), false, 0xF2F9FF);
 		scaledCanvasData = new BitmapData(Std.int(SIZE.width), Std.int(SIZE.height), false, 0xF2F9FF);
+		backgroundData = FrameManager.getFrame("main_background", "background");
 		// Wait for the sprite to be added to the display list
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
@@ -98,7 +108,7 @@ class Game extends Sprite
 		// Init scene
 		changeScene(GameScene.startMenu);
 		//changeScene(GameScene.levelSelect);
-		//changeScene(GameScene.play, "tuto_rock");
+		//changeScene(GameScene.ending);
 		
 		// Start main loop
 		lastFrame = 0;
@@ -156,6 +166,7 @@ class Game extends Sprite
 	private function draw () :Void {
 		// Reset the display data
 		canvasData.fillRect(canvasData.rect, 0xF2F9FF);
+		canvasData.copyPixels(backgroundData, backgroundData.rect, new Point());
 		// Draw entities
 		for (_entity in scene.children) {
 			drawEntity(_entity, canvasData);

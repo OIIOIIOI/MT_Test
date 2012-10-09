@@ -23,7 +23,7 @@ class LevelSelect extends Scene
 	private var slots:Entity;
 	private var title:FastEntity;
 	private var back:Button;
-	private var sound:Button;
+	//private var sound:Button;
 	
 	public function new () {
 		super();
@@ -40,28 +40,29 @@ class LevelSelect extends Scene
 		back.customClickHandler = entitiesClickHandler;
 		addChild(back);
 		// Mute
-		sound = new Button(24, ButtonType.sound);
+		/*sound = new Button(24, ButtonType.sound);
 		sound.x = Game.SIZE.width / Game.SCALE - sound.width - 8;
 		sound.y = Game.SIZE.height / Game.SCALE - sound.height - 8;
 		sound.customClickHandler = entitiesClickHandler;
-		addChild(sound);
+		addChild(sound);*/
 		// Slots
 		slots = new Entity();
 		addChild(slots);
 		//
 		// Parse levels
+		var _spacing:Int = 3;
 		var _slot:LevelSlot;
-		for (_i in 0...Game.LEVELS.length) {
+		for (_i in 0...Game.LEVELS.length - 1) {
 			_slot = new LevelSlot(_i);
-			_slot.x = (_slot.width + 1) * _i;
+			_slot.x = (_slot.width + _spacing) * (_i % 5);
+			_slot.y = (_slot.height + _spacing) * Math.floor(_i / 5);
 			slots.addChild(_slot);
-			slots.width += _slot.width + 1;
-			if (_slot.height > slots.height)	slots.height = _slot.height;
+			if (slots.width < _slot.width)		slots.width = 5 * (_slot.width + _spacing) - _spacing;
+			if (slots.height < _slot.height)	slots.height = Math.ceil(Game.LEVELS.length / 5) * (_slot.height + _spacing) - _spacing;
 			_slot.customClickHandler = entitiesClickHandler;
 		}
-		slots.width--;
 		slots.x = (Game.SIZE.width / Game.SCALE - slots.width) / 2;
-		slots.y = (Game.SIZE.height / Game.SCALE - slots.height) / 2;
+		slots.y = 12 + (Game.SIZE.height / Game.SCALE - slots.height) / 2;
 	}
 	
 	public function entitiesClickHandler (_target:Entity) :Void {
@@ -73,7 +74,7 @@ class LevelSelect extends Scene
 		else switch (_target) {
 			case cast(back, Entity):
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.startMenu } ));
-			case cast(sound, Entity): trace("MUTE");
+			//case cast(sound, Entity): trace("MUTE");
 		}
 		
 	}

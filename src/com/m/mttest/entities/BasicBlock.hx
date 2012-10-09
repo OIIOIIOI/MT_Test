@@ -31,13 +31,11 @@ class BasicBlock extends LevelEntity
 			_anim.addFrame(new AnimFrame("grass" + Std.random(8)));
 		}
 		else if (_type == exit) {
-			_anim.addFrame(new AnimFrame("exit0"));
-			_anim.addFrame(new AnimFrame("exit1"));
-			_anim.addFrame(new AnimFrame("exit2"));
-			_anim.addFrame(new AnimFrame("exit3"));
-			_anim.addFrame(new AnimFrame("exit4"));
-			_anim.addFrame(new AnimFrame("exit5"));
-			_anim.fps = 10;
+			_anim.addFrame(new AnimFrame("exit"));
+			// Shine FX
+			var _shine:ShineFX = new ShineFX();
+			_shine.mouseEnabled = false;
+			addChild(_shine);
 		}
 		if (_anim.frames.length > 0) {
 			anims.push(_anim);

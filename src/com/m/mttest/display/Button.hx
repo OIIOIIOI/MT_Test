@@ -33,7 +33,7 @@ class Button extends Entity
 		play(IDLE);
 		// Icon
 		icon = switch (_type) {
-			case startStop:		new PlayLevelButton();
+			case startStop:		new PlayLevelIcon();
 			case reset:			new ResetLevelButton();
 			case levelSelect:	new FastEntity("icon_level_select");
 			case sound:			new SoundButton();
@@ -50,7 +50,7 @@ class Button extends Entity
 	}
 	
 	override public function clickHandler () :Void {
-		if (Std.is(icon, SoundButton) || Std.is(icon, PlayLevelButton))	icon.clickHandler();
+		if (Std.is(icon, SoundButton) || Std.is(icon, PlayLevelIcon))	icon.clickHandler();
 		super.clickHandler();
 	}
 	

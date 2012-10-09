@@ -21,6 +21,7 @@ import flash.ui.ContextMenu;
 @:bitmap("res/font_numbers_blue.png") class FontNumbersBlueSheet extends flash.display.BitmapData { }
 @:bitmap("res/font_numbers_gold.png") class FontNumbersGoldSheet extends flash.display.BitmapData { }
 @:bitmap("res/tutos.png") class TutosSheet extends flash.display.BitmapData { }
+@:bitmap("res/background.png") class BGSheet extends flash.display.BitmapData { }
 
 class Main
 {
@@ -40,6 +41,7 @@ class Main
 		FrameManager.store("font_numbers_blue", new FontNumbersBlueSheet(0, 0), haxe.Resource.getString("fontNumbersJson"));
 		FrameManager.store("font_numbers_gold", new FontNumbersGoldSheet(0, 0), haxe.Resource.getString("fontNumbersJson"));
 		FrameManager.store("tutos", new TutosSheet(0, 0), haxe.Resource.getString("tutosJson"));
+		FrameManager.store("background", new BGSheet(0, 0), haxe.Resource.getString("backgroundJson"));
 		// Create and add game
 		Lib.current.stage.addChild(new Game());
 		// Profiler and context menu

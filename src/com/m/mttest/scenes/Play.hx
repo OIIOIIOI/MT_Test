@@ -1,26 +1,23 @@
 package com.m.mttest.scenes;
 
-import com.m.mttest.display.BitmapText;
 import com.m.mttest.display.Button;
 import com.m.mttest.display.EndGameScreen;
 import com.m.mttest.display.FastEntity;
-import com.m.mttest.display.Hint;
 import com.m.mttest.display.PauseScreen;
-import com.m.mttest.display.PlayLevelButton;
-import com.m.mttest.display.ResetLevelButton;
 import com.m.mttest.display.TextLayer;
 import com.m.mttest.display.TutoPopup;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.LevelEntity;
 import com.m.mttest.entities.Sheep;
+import com.m.mttest.entities.ShineFX;
 import com.m.mttest.events.EventManager;
 import com.m.mttest.events.GameEvent;
 import com.m.mttest.fx.ColorBlinkFX;
 import com.m.mttest.Game;
 import com.m.mttest.levels.Inventory;
 import com.m.mttest.levels.Level;
+import flash.geom.ColorTransform;
 import flash.geom.Point;
-import flash.text.engine.CFFHinting;
 import haxe.Timer;
 
 /**
@@ -36,7 +33,8 @@ class Play extends Scene
 	private var pauseButton:Button;
 	private var playButton:Button;
 	private var resetButton:Button;
-	private var bottomBG:Entity;
+	//private var bottomBG:Entity;
+	private var shineFX:ShineFX;
 	//private var hint:Hint;
 	private var failLayer:Entity;
 	private var pauseScreen:PauseScreen;
@@ -66,6 +64,11 @@ class Play extends Scene
 		resetButton.x = playButton.x - resetButton.width - 2;
 		resetButton.y = playButton.y + (playButton.height - resetButton.height) / 2;
 		resetButton.customClickHandler = entitiesClickHandler;
+		// Shine FX
+		shineFX = new ShineFX();
+		shineFX.mouseEnabled = false;
+		shineFX.x = playButton.icon.absX;
+		shineFX.y = playButton.icon.absY;
 		// Hint
 		//hint = new Hint();
 		//hint.y = 4;
@@ -97,14 +100,14 @@ class Play extends Scene
 		inventory.x = (Game.SIZE.width / Game.SCALE - inventory.width) / 2;
 		inventory.y = Game.SIZE.height / Game.SCALE - inventory.height - 2;
 		// Bottom background
-		bottomBG = new Entity();
-		bottomBG.color = 0x66F2F9FF;
-		bottomBG.width = Std.int(Game.SIZE.width / Game.SCALE);
-		bottomBG.height = Std.int(Math.max(playButton.height, inventory.height) + 4);
-		bottomBG.y = Game.SIZE.height / Game.SCALE - bottomBG.height;
+		//bottomBG = new Entity();
+		//bottomBG.color = 0x66F2F9FF;
+		//bottomBG.width = Std.int(Game.SIZE.width / Game.SCALE);
+		//bottomBG.height = Std.int(Math.max(playButton.height, inventory.height) + 4);
+		//bottomBG.y = Game.SIZE.height / Game.SCALE - bottomBG.height;
 		// Adds
 		addChild(level);
-		addChild(bottomBG);
+		//addChild(bottomBG);
 		addChild(inventory);
 		addChild(resetButton);
 		addChild(playButton);
@@ -142,13 +145,23 @@ class Play extends Scene
 				if (inventory.useItem(_invObject)) {
 					level.placeItem(_invObject, _event.data);
 					resetButton.icon.play("on");
+					// Add FX
+					if (inventory.getSelected() == null) {
+						addChild(shineFX);
+						playButton.addFX(new ColorBlinkFX(-1, new ColorTransform(1, 1, 1, 1, 32, 32, 32), null, 4));
+					}
 				}
 			case GameEvent.REMOVE_ITEM:
 				var _entity:LevelEntity = cast(_event.data, LevelEntity);
 				if (inventory.putBackItem(_entity.type, _entity.variant)) {
 					level.removeItem(_entity);
-					if (inventory.getUsed() == 0)
+					// Remove FX
+					removeChild(shineFX);
+					playButton.removeFX();
+					// If no item used
+					if (inventory.getUsed() == 0) {
 						resetButton.icon.play("off");
+					}
 				}
 			case GameEvent.SHEEP_DIED, GameEvent.SHEEP_ARRIVED, GameEvent.BOMB_EXPLODED:
 				//trace("END GAME EVENT: " + _event.type.toUpperCase());
@@ -163,18 +176,30 @@ class Play extends Scene
 				pauseGame(!level.paused);
 			case cast(playButton, Entity):
 				if (!level.active) {
-					//TextLayer.instance.removeChild(hint);
+					// Remove FX
+					removeChild(shineFX);
+					playButton.removeFX();
+					//
 					inventory.locked = true;
 					level.activate();
 					endGameTimer = Timer.delay(callback(checkEndGame), 1500);
 				}
 				else {
-					//TextLayer.instance.addChild(hint);
+					// Add FX
+					if (inventory.getSelected() == null) {
+						addChild(shineFX);
+						playButton.addFX(new ColorBlinkFX(-1, new ColorTransform(1, 1, 1, 1, 32, 32, 32), null, 4));
+					}
+					//
 					inventory.locked = false;
 					if (endGameTimer != null)	endGameTimer.stop();
 					level.reset();
 				}
 			case cast(resetButton, Entity):
+				// Remove FX
+				removeChild(shineFX);
+				playButton.removeFX();
+				//
 				resetLevel();
 		}
 	}
@@ -197,6 +222,7 @@ class Play extends Scene
 		// End game screen
 		if (endGameScreen != null) {
 			removeChild(endGameScreen);
+			endGameScreen.destroy();
 			endGameScreen = null;
 		}
 		// Lock
@@ -238,7 +264,7 @@ class Play extends Scene
 		var _endGame:Bool = true;
 		var _forceEndGame:Bool = false;
 		var _victory:Bool = true;
-		var _reason:String = "Some sheep did not make it...";
+		var _reason:Int = -1;
 		var _failTargets:Array<Point> = new Array<Point>();
 		// Loop
 		for (_e in level.endGameEntities) {
@@ -246,7 +272,8 @@ class Play extends Scene
 				//trace("sheep state: " + cast(_e, Sheep).state);
 				switch (cast(_e, Sheep).state) {
 					case SheepState.dead, SheepState.fallen:
-						_reason = "A sheep was injured...";
+						if (_reason <= 0)	_reason = 1;// One
+						else				_reason = 2;// Several
 						_forceEndGame = _fromTimer;// Delay end game with timer
 						_endGame = false;
 						_victory = false;
@@ -254,6 +281,7 @@ class Play extends Scene
 					case SheepState.asleep:
 						if (!_fromTimer) _endGame = false;// Verification is not coming from the timer
 						_victory = false;
+						if (_reason == -1)	_reason = 0;
 						_failTargets.push(new Point(_e.absX, _e.absY));
 					case SheepState.moving:
 						_endGame = false;// Sheep still moving
@@ -288,7 +316,7 @@ class Play extends Scene
 		}
 	}
 	
-	private function endGame (_victory:Bool, _reason:String) :Void {
+	private function endGame (_victory:Bool, _reason:Int) :Void {
 		// Unlock next level
 		var _unlock:Bool = false;
 		if (_victory) {
@@ -296,7 +324,7 @@ class Play extends Scene
 			//trace("unlocked level " + (Game.CURRENT_LEVEL + 1));
 		}
 		// End game screen
-		endGameScreen = new EndGameScreen(_victory, null, _unlock);
+		endGameScreen = new EndGameScreen(_victory, _reason, _unlock);
 		if (_victory)	endGameTimer = Timer.delay(showEndGame, 500);
 		else			endGameTimer = Timer.delay(showEndGame, 2000);
 	}
@@ -306,6 +334,7 @@ class Play extends Scene
 		level.paused = true;
 		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.LEVEL_PAUSED, true));
 		addChild(endGameScreen);
+		endGameScreen.addedToScene();
 		while (failLayer.numChildren > 0) {
 			failLayer.removeChildAt(0);
 		}

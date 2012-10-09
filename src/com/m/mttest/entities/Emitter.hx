@@ -57,7 +57,7 @@ class Emitter extends Entity
 		var _array:Array<Particle> = new Array<Particle>();
 		var _p:Particle;
 		var _color:UInt;
-		for (_i in 0...16) {
+		for (_i in 0...10) {
 			_color = 0xFF000000 + ColorManager.getHexFromHSL(65, 0.8, Math.random() * 0.3 + 0.7);
 			_p = new Particle(_color, 2, 1);
 			_p.addFX(new AdvancedFadeFX(_p.life, [new ColorTransform(), new ColorTransform(1, 1, 1, 0)]));
@@ -70,7 +70,7 @@ class Emitter extends Entity
 		var _array:Array<Particle> = new Array<Particle>();
 		var _p:Particle;
 		var _color:UInt;
-		for (_i in 0...24) {
+		for (_i in 0...12) {
 			_color = 0xFF000000 + ColorManager.getHexFromHSL(208, 0.25, Math.random() * 0.25 + 0.75);
 			_p = new Particle(_color, 2, 2);
 			_p.addFX(new AdvancedFadeFX(_p.life, [new ColorTransform(), new ColorTransform(1, 1, 1, 0)]));

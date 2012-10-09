@@ -13,6 +13,7 @@ import com.m.mttest.entities.Sheep;
 import com.m.mttest.entities.Wall;
 import com.m.mttest.events.EventManager;
 import com.m.mttest.events.GameEvent;
+import com.m.mttest.fx.ShakeFX;
 import com.m.mttest.Game;
 import com.m.mttest.levels.Inventory;
 import flash.display.BitmapData;
@@ -227,6 +228,9 @@ class Level extends Entity, implements IAStarClient
 				updateMap();
 			case LEType.blast:
 				collisionLayer.addChild(_entity);
+			case LEType.rock, LEType.unbreakable_wall, LEType.wall:
+				sceneLayer.addChild(_entity);
+				updateMap();
 			default:
 				sceneLayer.addChild(_entity);
 		}
@@ -246,6 +250,9 @@ class Level extends Entity, implements IAStarClient
 			case LEType.sheep:
 				_entity.parent.removeChild(_entity);
 				endGameEntities.remove(_entity);
+			case LEType.rock, LEType.unbreakable_wall, LEType.wall:
+				_entity.parent.removeChild(_entity);
+				updateMap();
 			default:
 				_entity.parent.removeChild(_entity);
 		}
@@ -357,6 +364,7 @@ class Level extends Entity, implements IAStarClient
 		// If blasts occured, add the entities
 		if (Lambda.count(blasts) > 0) {
 			addBlasts();
+			addFX(new ShakeFX(8, ShakeFX.BOTH, 2), true, true);
 		}
 		// Check for collisions
 		var _sheep:Sheep;

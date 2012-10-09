@@ -34,6 +34,10 @@ class Sheep extends LevelEntity
 	private var wait:Bool;
 	private var sleepFX:SleepFX;
 	
+	// Exception for level_big_time
+	private var badPathA:Array<IntPoint>;
+	private var goodPathA:Array<IntPoint>;
+	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level) {
 		super(_x, _y, _level, LEType.sheep);
 		
@@ -98,6 +102,35 @@ class Sheep extends LevelEntity
 		if (path == null) {
 			path = findPath();
 			if (path != null) {
+				if (Game.LEVELS[Game.CURRENT_LEVEL].name == "level_big_time") {
+					if (badPathA == null) {
+						badPathA = new Array<IntPoint>();
+						badPathA.push(new IntPoint(1, 6));
+						badPathA.push(new IntPoint(2, 6));
+						badPathA.push(new IntPoint(3, 6));
+						badPathA.push(new IntPoint(4, 6));
+						badPathA.push(new IntPoint(4, 5));
+						badPathA.push(new IntPoint(4, 4));
+						badPathA.push(new IntPoint(4, 3));
+						badPathA.push(new IntPoint(4, 2));
+						badPathA.push(new IntPoint(5, 2));
+						badPathA.push(new IntPoint(6, 2));
+						//
+						goodPathA = new Array<IntPoint>();
+						goodPathA.push(new IntPoint(1, 6));
+						goodPathA.push(new IntPoint(2, 6));
+						goodPathA.push(new IntPoint(3, 6));
+						goodPathA.push(new IntPoint(4, 6));
+						goodPathA.push(new IntPoint(4, 5));
+						goodPathA.push(new IntPoint(4, 4));
+						goodPathA.push(new IntPoint(5, 4));
+						goodPathA.push(new IntPoint(6, 4));
+						goodPathA.push(new IntPoint(6, 3));
+						goodPathA.push(new IntPoint(6, 2));
+					}
+					if (comparePaths(path, badPathA))
+						path = goodPathA;
+				}
 				// FX
 				removeChild(sleepFX);
 				state = SheepState.moving;
@@ -150,6 +183,14 @@ class Sheep extends LevelEntity
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SHEEP_ARRIVED));
 			}
 		}
+	}
+	
+	private function comparePaths (_pathA:Array<IntPoint>, _pathB:Array<IntPoint>) :Bool {
+		if (_pathA.length != _pathB.length)	return false;
+		for (_i in 0..._pathA.length) {
+			if (!_pathA[_i].equals(_pathB[_i]))	return false;
+		}
+		return true;
 	}
 	
 	public function findPath () :Array<IntPoint> {
