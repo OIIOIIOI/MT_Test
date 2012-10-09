@@ -102,9 +102,10 @@ class LevelSlot extends Entity
 		play(IDLE);
 		
 		if (!Game.LEVELS[index].locked) {
-			if (Game.LEVELS[index].tuto != null)
-				number = new BitmapText(Std.string(index + 1), "font_numbers_gold");
-			else number = new BitmapText(Std.string(index + 1), "font_numbers_blue");
+			number = new BitmapText(Std.string(index + 1), "font_numbers_gold");
+			//if (Game.LEVELS[index].tuto != null)
+				//number = new BitmapText(Std.string(index + 1), "font_numbers_gold");
+			//else number = new BitmapText(Std.string(index + 1), "font_numbers_blue");
 			number.mouseEnabled = false;
 			number.x = (width - number.width) / 2;
 			number.y = (height - number.height) / 2;

@@ -83,11 +83,11 @@ class Game extends Sprite
 			LEVELS.push( { name:"tuto_time", locked:getSavedState("tuto_time"), tuto:Tuto.tutoTime, sheep:2 } );
 			LEVELS.push( { name:"level_diag", locked:getSavedState("level_diag"), tuto:null, sheep:3 } );
 			LEVELS.push( { name:"tuto_hole", locked:getSavedState("tuto_hole"), tuto:Tuto.tutoHole, sheep:2 } );
-			LEVELS.push( { name:"level_minefield", locked:getSavedState("level_minefield"), tuto:null, sheep:5 } );
+			LEVELS.push( { name:"level_minefield", locked:getSavedState("level_minefield"), tuto:null, sheep:5 } );//
 			LEVELS.push( { name:"tuto_big", locked:getSavedState("tuto_big"), tuto:Tuto.tutoBigBomb, sheep:5 } );
-			LEVELS.push( { name:"level_big_time", locked:getSavedState("level_big_time"), tuto:null, sheep:3 } );
+			LEVELS.push( { name:"level_big_time", locked:getSavedState("level_big_time"), tuto:null, sheep:3 } );//
 			LEVELS.push( { name:"tuto_chain", locked:getSavedState("tuto_chain"), tuto:Tuto.tutoChain, sheep:1 } );
-			LEVELS.push( { name:"level_mayhem", locked:getSavedState("level_mayhem"), tuto:null, sheep:7 } );
+			LEVELS.push( { name:"level_mayhem", locked:getSavedState("level_mayhem"), tuto:null, sheep:7 } );//
 			LEVELS.push( { name:"level_heart", locked:getSavedState("level_heart"), tuto:null, sheep:14 } );
 			//LEVELS.push( { name:"sandbox", locked:false, tuto:null } );
 		}
