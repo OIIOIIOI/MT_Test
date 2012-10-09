@@ -3,8 +3,10 @@ package com.m.mttest.scenes;
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.display.BitmapText;
+import com.m.mttest.display.Button;
 import com.m.mttest.display.FastEntity;
 import com.m.mttest.display.Lock;
+import com.m.mttest.display.TutoPopup;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.events.EventManager;
 import com.m.mttest.events.GameEvent;
@@ -20,48 +22,60 @@ class LevelSelect extends Scene
 	
 	private var slots:Entity;
 	private var title:FastEntity;
-	private var back:FastEntity;
-	private var sound:FastEntity;
+	private var back:Button;
+	private var sound:Button;
 	
 	public function new () {
 		super();
-		
+		// Title
 		title = new FastEntity("title_level_select");
 		title.scale = 2;
 		title.x = (Game.SIZE.width / Game.SCALE - title.width * title.scale) / 2;
 		title.y = 12;
 		addChild(title);
-		
-		back = new FastEntity("button_home_22");
+		// Home
+		back = new Button(24, ButtonType.home);
 		back.x = 8;
 		back.y = Game.SIZE.height / Game.SCALE - back.height - 8;
+		back.customClickHandler = entitiesClickHandler;
 		addChild(back);
-		
-		sound = new FastEntity("button_sound_on");
+		// Mute
+		sound = new Button(24, ButtonType.sound);
 		sound.x = Game.SIZE.width / Game.SCALE - sound.width - 8;
 		sound.y = Game.SIZE.height / Game.SCALE - sound.height - 8;
+		sound.customClickHandler = entitiesClickHandler;
 		addChild(sound);
-		
+		// Slots
 		slots = new Entity();
 		addChild(slots);
-		
+		//
+		// Parse levels
 		var _slot:LevelSlot;
 		for (_i in 0...Game.LEVELS.length) {
-			_slot = new LevelSlot(_i, this);
+			_slot = new LevelSlot(_i);
 			_slot.x = (_slot.width + 1) * _i;
 			slots.addChild(_slot);
 			slots.width += _slot.width + 1;
 			if (_slot.height > slots.height)	slots.height = _slot.height;
+			_slot.customClickHandler = entitiesClickHandler;
 		}
 		slots.width--;
 		slots.x = (Game.SIZE.width / Game.SCALE - slots.width) / 2;
 		slots.y = (Game.SIZE.height / Game.SCALE - slots.height) / 2;
 	}
 	
-	public function entityClickHandler (_target:LevelSlot) :Void {
-		//trace("entityClickHandler: " + _target.index);
-		if (!Game.LEVELS[_target.index].locked)
-			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.play, param:_target.index } ));
+	public function entitiesClickHandler (_target:Entity) :Void {
+		//trace("entitiesClickHandler: " + _target.index);
+		if (Std.is(_target, LevelSlot)) {
+			if (!Game.LEVELS[cast(_target, LevelSlot).index].locked)
+				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.play, param:cast(_target, LevelSlot).index } ));
+		}
+		else switch (_target) {
+			case cast(back, Entity):
+				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.startMenu } ));
+			case cast(sound, Entity): trace("MUTE");
+		}
+		
 	}
 	
 }
@@ -72,15 +86,13 @@ class LevelSlot extends Entity
 	static public var IDLE:String = "idle";
 	
 	public var index (default, null):Int;
-	private var scene:LevelSelect;
 	private var number:BitmapText;
 	private var lock:Lock;
 	
-	public function new (_index:Int, _scene:LevelSelect) {
+	public function new (_index:Int) {
 		super();
 		
 		index = _index;
-		scene = _scene;
 		
 		var _anim:Animation;
 		_anim = new Animation(IDLE, "tiles");
@@ -89,9 +101,10 @@ class LevelSlot extends Entity
 		play(IDLE);
 		
 		if (!Game.LEVELS[index].locked) {
-			number = new BitmapText(Std.string(index + 1), "font_numbers_gold");
+			if (Game.LEVELS[index].tuto != null)
+				number = new BitmapText(Std.string(index + 1), "font_numbers_gold");
+			else number = new BitmapText(Std.string(index + 1), "font_numbers_blue");
 			number.mouseEnabled = false;
-			//number.scale = 2;
 			number.x = (width - number.width) / 2;
 			number.y = (height - number.height) / 2;
 			addChild(number);
@@ -105,13 +118,9 @@ class LevelSlot extends Entity
 		}
 	}
 	
-	override public function clickHandler () :Void {
-		scene.entityClickHandler(this);
-	}
-	
 }
 
-typedef LevelObject = { name:String, locked:Bool }
+typedef LevelObject = { name:String, locked:Bool, tuto:Tuto }
 
 
 

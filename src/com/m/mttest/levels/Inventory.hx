@@ -3,11 +3,11 @@ package com.m.mttest.levels;
 import com.m.mttest.anim.Animation;
 import com.m.mttest.anim.AnimFrame;
 import com.m.mttest.anim.FrameManager;
-import com.m.mttest.display.BitmapText;
-import com.m.mttest.display.TextLayer;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.InvEntity;
 import com.m.mttest.entities.LevelEntity;
+import com.m.mttest.events.EventManager;
+import com.m.mttest.events.GameEvent;
 import com.m.mttest.Game;
 import flash.display.BitmapData;
 import flash.errors.Error;
@@ -20,14 +20,13 @@ import flash.errors.Error;
 class Inventory extends Entity
 {
 	
-	static public var IDLE:String = "idle";
+	public var locked (default, setLocked):Bool;
 	
 	private var invData:BitmapData;
 	private var list:Array<InvObject>;
 	private var index:Int;
 	
 	private var slots:Entity;
-	private var itemName:BitmapText;
 	
 	public function new () {
 		super();
@@ -38,20 +37,9 @@ class Inventory extends Entity
 		invData = FrameManager.getFrame(_name, "levels");
 		if (invData == null)
 			throw new Error("The inventory \"" + _name + "\" was not found");
-		// Background
-		var _anim:Animation;
-		_anim = new Animation(IDLE, "tiles");
-		if (invData.width <= 4)	_anim.addFrame(new AnimFrame("bg_inventory0"));
-		else					_anim.addFrame(new AnimFrame("bg_inventory1"));
-		anims.push(_anim);
-		play(IDLE);
 		// Container
 		slots = new Entity();
 		addChild(slots);
-		// Name
-		itemName = new BitmapText("...");
-		itemName.scale = 2;
-		TextLayer.instance.addChild(itemName);
 		// Parse data
 		parse();
 	}
@@ -82,20 +70,27 @@ class Inventory extends Entity
 				else				list[_indexOf].count++;
 			}
 		}
-		//refresh();
+		refresh();
 		//trace("inventory: " + list);
 	}
 	
 	public function refresh () :Void {
 		if (slots.numChildren == 0) {
 			var _slot:InvSlot;
-			var _count:Int = (invData.width <= 4) ? 4 : 8;
-			for (_i in 0..._count) {
-				_slot = new InvSlot(this);
-				_slot.x = Std.int(_i / 4) * (_slot.width + 1) + 4;
-				_slot.y = (_i % 4) * (_slot.height + 1) + 4;
-				slots.addChild(_slot);
+			var _index:Int = 0;
+			for (_i in 0...list.length) {
+				for (_j in 0...(list[_i].count - list[_i].used)) {
+					_slot = new InvSlot(this);
+					_slot.x = _index * (_slot.width + 1);
+					slots.addChild(_slot);
+					_index++;
+					width = slots.numChildren * (_slot.width + 1) - 1;
+					height = _slot.height;
+				}
 			}
+		}
+		if (slots.numChildren == 7) {
+			slots.x = -2;
 		}
 		for (_i in 0...slots.numChildren) {
 			cast(slots.getChildAt(_i), InvSlot).display(null);
@@ -110,31 +105,18 @@ class Inventory extends Entity
 				cast(slots.getChildAt(_index), InvSlot).listIndex = _i;
 				cast(slots.getChildAt(_index), InvSlot).display(list[_i].type, list[_i].variant);
 				_index++;
-				if (_index >= 8) {
+				if (_index >= slots.numChildren) {
 					_break = true;
 					break;
 				}
 			}
 		}
-		/*// Stacking method
-		var _index:Int = 0;
-		for (_i in 0...list.length) {
-			if (list[_i].count > list[_i].used) {
-				cast(slots.getChildAt(_index), InvSlot).listIndex = _i;
-				cast(slots.getChildAt(_index), InvSlot).display(list[_i].type, list[_i].variant);
-				_index++;
-				if (_index >= 8)	break;
-			}
-		}*/
 		// If at least one slot is full, select the first one
 		if (_index > 0) {
 			slots.getChildAt(0).play(InvSlot.ON);
 			index = 0;
 		}
 		else index = -1;
-		
-		itemName.x = absX * Game.SCALE;
-		itemName.y = absY * Game.SCALE;
 	}
 	
 	private function isInList (_type:LEType, _variant:Int) :Int {
@@ -143,6 +125,14 @@ class Inventory extends Entity
 				return _i;
 		}
 		return -1;
+	}
+	
+	public function getUsed () :Int {
+		var _used:Int = 0;
+		for (_i in 0...list.length) {
+			_used += list[_i].used;
+		}
+		return _used;
 	}
 	
 	public function getSelected () :InvObject {
@@ -180,13 +170,33 @@ class Inventory extends Entity
 	}
 	
 	public function entityClickHandler (_target:InvSlot) :Void {
-		//trace("entityClickHandler: " + _target);
+		if (locked)	return;
+		// Select target slot
 		if (index != -1)
 			slots.getChildAt(index).play(InvSlot.OFF);
 		index = slots.getChildIndex(_target);
-		//index = _target.listIndex;
 		_target.play(InvSlot.ON);
-		itemName.text = LevelEntity.typeToName(list[_target.listIndex].type, list[_target.listIndex].variant);
+		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SET_HINT, LevelEntity.typeToDesc(list[_target.listIndex].type)));
+	}
+	
+	public function setLocked (_locked:Bool) :Bool {
+		locked = _locked;
+		var _slot:InvSlot;
+		if (_locked) {
+			for (_i in 0...slots.numChildren) {
+				_slot = cast(slots.getChildAt(_i), InvSlot);
+				if (_slot.entity != null)	_slot.entity.alpha = 0.5;
+				_slot.play(InvSlot.OFF);
+			}
+		}
+		else {
+			for (_i in 0...slots.numChildren) {
+				_slot = cast(slots.getChildAt(_i), InvSlot);
+				if (_slot.entity != null)	_slot.entity.alpha = 1;
+			}
+			if (index > -1)	slots.getChildAt(index).play(InvSlot.ON);
+		}
+		return locked;
 	}
 	
 }
@@ -200,8 +210,8 @@ class InvSlot extends Entity
 	static public var OFF:String = "off";
 	
 	public var listIndex:Int;
+	public var entity (default, null):InvEntity;
 	private var inventory:Inventory;
-	private var entity:InvEntity;
 	
 	public function new (_inventory:Inventory) {
 		super();

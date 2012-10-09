@@ -123,6 +123,22 @@ class LevelEntity extends Entity
 		}
 	}
 	
+	static public function typeToDesc (_type:LEType, _variant:Int = 0) :Array<String> {
+		return switch (_type) {
+			case unbreakable_wall:	["Fences stop everything!", "They're even harder than rock, somehow."];
+			case floor:				["Place things here.", "If you want to, that is... A bomb, maybe?"];
+			case blocked:			["The farmer got there first.", "You can't place bombs here."];
+			case exit:				["The sheep need to go here,", "where the grass is greener..."];
+			case border:			null;
+			case hole:				["Hey, a sheep-sized hole!", "What a coincidence, right?!"];
+			case bomb:				Bomb.getDesc(_variant);
+			case sheep:				["Baaaaaaaaah!"];
+			case wall:				["Blowing up haystack:", "looking for needles like a boss."];
+			case rock:				["One blast will not be enough", "to destroy this rock."];
+			case blast:				null;
+		}
+	}
+	
 	static public function getConstructorParams (_type:LEType, _variant:Int = 0) :Array<Dynamic> {
 		return switch (_type) {
 			case bomb, hole, border:						[_variant];

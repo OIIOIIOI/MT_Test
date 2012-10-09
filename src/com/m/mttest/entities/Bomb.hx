@@ -126,6 +126,15 @@ class Bomb extends LevelEntity
 		return _name;
 	}
 	
+	static public function getDesc (_variant:Int = 0) :Array<String> {
+		var _size:Int = Math.floor(_variant / 256);
+		var _timer:Int = _variant % 256;
+		if (_size == 0 && _timer == 0)		return ["Small bomb"];
+		else if (_size == 0 && _timer > 0)	return ["Small bomb with timer"];
+		else if (_size > 0 && _timer == 0)	return ["Big bomb"];
+		else								return ["Big bomb with timer"];
+	}
+	
 }
 
 enum BombState {

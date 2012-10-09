@@ -9,7 +9,7 @@ import com.m.mttest.entities.Entity;
  * @author 01101101
  */
 
-class ResetLevelButton extends Entity
+class SoundButton  extends Entity
 {
 	
 	static public var ON:String = "on";
@@ -20,13 +20,19 @@ class ResetLevelButton extends Entity
 		
 		var _anim:Animation;
 		_anim = new Animation(ON, "tiles");
-		_anim.addFrame(new AnimFrame("icon_reset_on"));
+		_anim.addFrame(new AnimFrame("icon_sound_on"));
 		anims.push(_anim);
 		_anim = new Animation(OFF, "tiles");
-		_anim.addFrame(new AnimFrame("icon_reset_off"));
+		_anim.addFrame(new AnimFrame("icon_sound_off"));
 		anims.push(_anim);
 		
-		play(OFF);
+		play(ON);
+	}
+	
+	override public function clickHandler () :Void {
+		if (currentAnimName == ON)	play(OFF);
+		else						play(ON);
+		super.clickHandler();
 	}
 	
 }

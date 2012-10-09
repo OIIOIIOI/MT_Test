@@ -272,6 +272,7 @@ class Level extends Entity, implements IAStarClient
 	
 	public function entityClickHandler (_target:LevelEntity) :Void {
 		//trace("entityClickHandler: " + _target.type + " (user placed: " + _target.userPlaced + ")");
+		if (active)	return;
 		if (_target.userPlaced) {
 			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.REMOVE_ITEM, _target));
 			return;
@@ -280,6 +281,7 @@ class Level extends Entity, implements IAStarClient
 			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.PLACE_ITEM, new IntPoint(_target.mapX, _target.mapY)));
 			return;
 		}
+		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SET_HINT, LevelEntity.typeToDesc(_target.type)));
 	}
 	
 	public function placeItem (_invObject:InvObject, _point:IntPoint) :Void {

@@ -1,8 +1,8 @@
 package com.m.mttest;
 
 import com.m.mttest.display.BitmapText;
-import com.m.mttest.display.Interface;
 import com.m.mttest.display.TextLayer;
+import com.m.mttest.display.TutoPopup;
 import com.m.mttest.entities.BasicBlock;
 import com.m.mttest.entities.Entity;
 import com.m.mttest.entities.LevelEntity;
@@ -17,6 +17,7 @@ import com.m.mttest.fx.FadeFX;
 import com.m.mttest.fx.ShakeFX;
 import com.m.mttest.levels.Inventory;
 import com.m.mttest.levels.Level;
+import com.m.mttest.scenes.EndingScene;
 import com.m.mttest.scenes.LevelSelect;
 import com.m.mttest.scenes.Play;
 import com.m.mttest.scenes.StartMenu;
@@ -49,6 +50,7 @@ class Game extends Sprite
 	inline static public var TILE_SIZE:UInt = 16;// The size of a single tile
 	
 	static public var LEVELS:Array<LevelObject>;
+	static public var CURRENT_LEVEL:Int;
 	
 	private var canvas:Bitmap;// The display container
 	private var canvasData:BitmapData;// The display data
@@ -63,31 +65,39 @@ class Game extends Sprite
 		
 		if (LEVELS == null) {
 			LEVELS = new Array<LevelObject>();
-			LEVELS.push( { name:"tuto_basics", locked:false } );
-			LEVELS.push( { name:"tuto_rock", locked:false } );
-			LEVELS.push( { name:"tuto_timer", locked:false } );
-			LEVELS.push( { name:"tuto_blocking", locked:false } );
-			LEVELS.push( { name:"sandbox", locked:false } );
-			LEVELS.push( { name:"fake_level", locked:true } );
+			LEVELS.push( { name:"tuto_start", locked:false, tuto:Tuto.tutoStart } );
+			LEVELS.push( { name:"tuto_time", locked:false, tuto:Tuto.tutoTime } );
+			LEVELS.push( { name:"tuto_rock", locked:false, tuto:Tuto.tutoRock } );
+			LEVELS.push( { name:"tuto_hole", locked:false, tuto:Tuto.tutoHole } );
+			//LEVELS.push( { name:"sandbox", locked:false, tuto:null } );
 		}
+		CURRENT_LEVEL = -1;
 		// Create the empty display data
-		canvasData = new BitmapData(Std.int(SIZE.width / SCALE), Std.int(SIZE.height / SCALE), false, 0xE7E7E7);
-		scaledCanvasData = new BitmapData(Std.int(SIZE.width), Std.int(SIZE.height), false, 0xE7E7E7);
+		canvasData = new BitmapData(Std.int(SIZE.width / SCALE), Std.int(SIZE.height / SCALE), false, 0xF2F9FF);
+		scaledCanvasData = new BitmapData(Std.int(SIZE.width), Std.int(SIZE.height), false, 0xF2F9FF);
 		// Wait for the sprite to be added to the display list
 		addEventListener(Event.ADDED_TO_STAGE, init);
+	}
+	
+	static public function unlockLevel (_index:Int) :Bool {
+		// If invalid index or level already unlocked
+		if (_index < 0 || _index >= LEVELS.length || !LEVELS[_index].locked)
+			return false;
+		// else, success
+		LEVELS[_index].locked = false;
+		return true;
 	}
 	
 	private function init (_event:Event) :Void {
 		removeEventListener(Event.ADDED_TO_STAGE, init);
 		
 		// Create the display container and scale it
-		//canvas = new Bitmap(canvasData);
 		canvas = new Bitmap(scaledCanvasData);
-		//canvas.scaleX = canvas.scaleY = SCALE;
 		addChild(canvas);
 		
 		// Init scene
-		changeScene(GameScene.levelSelect);
+		changeScene(GameScene.startMenu);
+		//changeScene(GameScene.levelSelect);
 		//changeScene(GameScene.play, "tuto_rock");
 		
 		// Start main loop
@@ -102,7 +112,6 @@ class Game extends Sprite
 	private function gameEventHandler (_event:GameEvent) :Void {
 		switch (_event.type) {
 			case GameEvent.CHANGE_SCENE:
-				//trace("CHANGE_SCENE " + _event.data.scene + " / " + _event.data.param);
 				changeScene(_event.data.scene, _event.data.param);
 		}
 	}
@@ -110,15 +119,19 @@ class Game extends Sprite
 	private function changeScene (_scene:GameScene, ?_param:Dynamic) :Void {
 		// Destroy current scene
 		if (scene != null)	scene.destroy();
+		while(TextLayer.instance.numChildren > 0) {
+			TextLayer.instance.removeChildAt(0);
+		}
 		// Default scene
 		if (_scene == null)	_scene = GameScene.startMenu;
 		// Create new scene
 		scene = switch (_scene) {
-			case GameScene.startMenu: new StartMenu();
+			case GameScene.startMenu:	new StartMenu();
 			case GameScene.levelSelect: new LevelSelect();
-			case GameScene.play: new Play(_param);
+			case GameScene.play:		new Play(_param);
+			case GameScene.ending:	new EndingScene();
 		}
-		/*// TODO Play music
+		/*// TODO Play music (make music)
 		if (scene.theme != null)
 			playTheme(scene.theme);*/
 	}
@@ -142,7 +155,7 @@ class Game extends Sprite
 	
 	private function draw () :Void {
 		// Reset the display data
-		canvasData.fillRect(canvasData.rect, 0xE7E7E7);
+		canvasData.fillRect(canvasData.rect, 0xF2F9FF);
 		// Draw entities
 		for (_entity in scene.children) {
 			drawEntity(_entity, canvasData);
@@ -209,6 +222,7 @@ class Game extends Sprite
 		// Search targets
 		var _point:Point = new Point(Std.int(_event.stageX / SCALE), Std.int(_event.stageY / SCALE));
 		var _targets:Array<Entity> = getEntitiesAt(scene, Std.int(_point.x), Std.int(_point.y));
+		_targets = _targets.concat(getEntitiesAt(TextLayer.instance, Std.int(_point.x * SCALE), Std.int(_point.y * SCALE)));
 		//trace("clickHandler: " + _targets);
 		if (_targets.length > 0) {
 			var _target:Entity = _targets.pop();
@@ -242,6 +256,7 @@ enum GameScene {
 	startMenu;
 	levelSelect;
 	play;
+	ending;
 }
 
 

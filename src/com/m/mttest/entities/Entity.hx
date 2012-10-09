@@ -38,6 +38,7 @@ class Entity
 	public var absScale (getAbsScale, never):Int;
 	
 	public var mouseEnabled:Bool;
+	public var customClickHandler:Entity->Void;
 	
 	public var anims (default, null):Array<Animation>;
 	public var currentAnim (default, null):Int;
@@ -53,7 +54,7 @@ class Entity
 	public var drawHitBox:Bool;
 	
 	public var effects (default, null):Array<FX>;
-	public var alpha:Float;
+	public var alpha (default, setAlpha):Float;
 	public var blendMode:BlendMode;
 	public var mask:Rectangle = null;
 	
@@ -96,7 +97,8 @@ class Entity
 	
 	public function removeChildAt (_index:Int) :Void {
 		if (_index > numChildren - 1 || _index < -1)	return;
-		children.splice(_index, 1);
+		removeChild(getChildAt(_index));
+		//children.splice(_index, 1);
 	}
 	
 	private function getNumChildren () :Int {
@@ -118,6 +120,8 @@ class Entity
 	}
 	
 	public function clickHandler () :Void {
+		if (customClickHandler != null)
+			customClickHandler(this);
 		//trace("clicked " + this);
 	}
 	
@@ -182,15 +186,15 @@ class Entity
 		return _v;
 	}
 	
-	public function getRect () :Rectangle {
+	private function getRect () :Rectangle {
 		return new Rectangle(x, y, width, height);
 	}
 	
-	public function getAbsRect () :Rectangle {
+	private function getAbsRect () :Rectangle {
 		return new Rectangle(absX, absY, width, height);
 	}
 	
-	public function getAbsHitBox () :Rectangle {
+	private function getAbsHitBox () :Rectangle {
 		var _rect:Rectangle = absRect.clone();
 		if (hitBox != null) {
 			_rect.x += hitBox.x;
@@ -199,6 +203,17 @@ class Entity
 			_rect.height = hitBox.height;
 		}
 		return _rect;
+	}
+	
+	private function setAlpha (_alpha:Float) :Float {
+		alpha = _alpha;
+		// Children
+		if (children != null) {
+			for (_e in children) {
+				_e.alpha = _alpha;
+			}
+		}
+		return alpha;
 	}
 	
 	// TODO use hitbox, just like hitTestRect
@@ -218,7 +233,7 @@ class Entity
 		return (_hitRect.intersects(_rect));
 	}
 	
-	public function addFX (_fx:FX, _overwrite:Bool = true) :Void {
+	public function addFX (_fx:FX, _overwrite:Bool = true, _applyToChildren:Bool = false) :Void {
 		for (f in effects) {
 			if (Std.is(f, Type.getClass(_fx))) {
 				if (!_overwrite)
@@ -227,18 +242,30 @@ class Entity
 			}
 		}
 		effects.push(_fx);
+		// Children
+		if (_applyToChildren) {
+			for (_e in children) {
+				_e.addFX(_fx, _overwrite, _applyToChildren);
+			}
+		}
 	}
 	
-	public function removeFX (?_fx:FX) :Void {
+	public function removeFX (?_fx:FX, _applyToChildren:Bool = false) :Void {
 		if (_fx == null)	effects = new Array<FX>();
 		else				effects.remove(_fx);
+		// Children
+		if (_applyToChildren) {
+			for (_e in children) {
+				_e.removeFX(_fx, _applyToChildren);
+			}
+		}
 	}
 	
 	public function resetAnims () :Void {
 		anims = new Array<Animation>();
 		currentAnim = -1;
 		currentFrame = -1;
-		paused = true;
+		//paused = true;
 	}
 	
 	public function play (_animName:String) :Void {
@@ -249,11 +276,11 @@ class Entity
 				currentAnim = i;
 				currentFrame = 0;
 				lastDraw = Date.now().getTime();
-				if (anims[i].frames.length == 1) {
+				/*if (anims[i].frames.length == 1) {
 					paused = true;
 				} else {
 					paused = false;
-				}
+				}*/
 				// Init width/height
 				var _frame:Frame = FrameManager.getFrameInfo(currentFrameName, anims[i].spritesheet);
 				if (_frame != null) {
@@ -266,10 +293,10 @@ class Entity
 	}
 	
 	public function update () :Void {
+		if (paused)	return;
 		// Animate
 		if (currentAnim != -1 &&
 			anims[currentAnim].frames.length > 1 &&
-			!paused &&
 			Date.now().getTime() - lastDraw > 1000 / anims[currentAnim].fps)
 		{
 			currentFrame++;

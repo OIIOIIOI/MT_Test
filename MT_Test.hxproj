@@ -23,7 +23,7 @@
     <option flashStrict="False" />
     <option mainClass="com.m.mttest.Main" />
     <option enabledebug="True" />
-    <option additional="-resource res/tiles.json@tilesJson&#xA;-resource res/levels.json@levelsJson&#xA;-resource res/font_volter.json@fontVolterJson&#xA;-resource res/font_superscript.json@fontSuperscriptJson&#xA;-resource res/font_numbers.json@fontNumbersJson&#xA;-resource res/font_m_mini.json@fontmMiniJson" />
+    <option additional="-resource res/tiles.json@tilesJson&#xA;-resource res/levels.json@levelsJson&#xA;-resource res/font_volter.json@fontVolterJson&#xA;-resource res/font_superscript.json@fontSuperscriptJson&#xA;-resource res/font_numbers.json@fontNumbersJson&#xA;-resource res/tutos.json@tutosJson" />
   </build>
   <!-- haxelib libraries -->
   <haxelib>

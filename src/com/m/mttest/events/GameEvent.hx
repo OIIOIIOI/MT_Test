@@ -11,6 +11,7 @@ class GameEvent extends Event
 {
 	
 	inline static public var CHANGE_SCENE:String = "change_scene";
+	inline static public var LEVEL_PAUSED:String = "level_paused";
 	inline static public var PLAY_LEVEL:String = "play_level";
 	inline static public var RESET_LEVEL:String = "reset_level";
 	inline static public var PLACE_ITEM:String = "place_item";
@@ -18,6 +19,8 @@ class GameEvent extends Event
 	inline static public var SHEEP_DIED:String = "sheep_died";
 	inline static public var SHEEP_ARRIVED:String = "sheep_arrived";
 	inline static public var BOMB_EXPLODED:String = "bomb_exploded";
+	inline static public var SET_HINT:String = "set_hint";
+	inline static public var EXIT_TUTO:String = "exit_tuto";
 	
 	public var data:Dynamic;
 	

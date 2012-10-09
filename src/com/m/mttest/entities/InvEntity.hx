@@ -28,7 +28,7 @@ class InvEntity extends Entity
 		variant = _variant;
 		inventory = _inventory;
 		
-		x = y = 2;
+		x = y = 4;
 		width = height = Game.TILE_SIZE;
 		color = 0xFF000000 + LevelEntity.typeToColor(_type);
 		
