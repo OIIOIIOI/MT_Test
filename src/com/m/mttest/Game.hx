@@ -32,6 +32,7 @@ import flash.geom.ColorTransform;
 import flash.geom.Matrix;
 import flash.geom.Point;
 import flash.geom.Rectangle;
+import flash.net.SharedObject;
 import flash.ui.Keyboard;
 import haxe.Timer;
 
@@ -50,6 +51,7 @@ class Game extends Sprite
 	inline static public var MS:Float = 1000 / FPS;
 	inline static public var TILE_SIZE:UInt = 16;// The size of a single tile
 	
+	static public var SO:SharedObject;
 	static public var LEVELS:Array<LevelObject>;
 	static public var CURRENT_LEVEL:Int;
 	
@@ -65,19 +67,28 @@ class Game extends Sprite
 	public function new () {
 		super();
 		
+		// Saved data
+		SO = SharedObject.getLocal("moutonsSave");
+		//SO.clear();
+		if (SO.data.levels == null || !Std.is(SO.data.levels, Array)) {
+			SO.data.levels = new Array<Dynamic>();
+			SO.flush();
+		}
+		
+		// Levels
 		if (LEVELS == null) {
 			LEVELS = new Array<LevelObject>();
-			LEVELS.push( { name:"tuto_start", locked:false, tuto:Tuto.tutoStart } );
-			LEVELS.push( { name:"tuto_rock", locked:false, tuto:Tuto.tutoRock } );
-			LEVELS.push( { name:"tuto_time", locked:false, tuto:Tuto.tutoTime } );
-			LEVELS.push( { name:"level_diag", locked:false, tuto:null } );
-			LEVELS.push( { name:"tuto_hole", locked:false, tuto:Tuto.tutoHole } );
-			LEVELS.push( { name:"level_minefield", locked:false, tuto:null } );
-			LEVELS.push( { name:"tuto_big", locked:false, tuto:Tuto.tutoBigBomb } );
-			LEVELS.push( { name:"level_big_time", locked:false, tuto:null } );
-			LEVELS.push( { name:"tuto_chain", locked:false, tuto:Tuto.tutoChain } );
-			LEVELS.push( { name:"level_mayhem", locked:false, tuto:null } );
-			LEVELS.push( { name:"level_heart", locked:false, tuto:null } );
+			LEVELS.push( { name:"tuto_start", locked:false, tuto:Tuto.tutoStart, sheep:1 } );
+			LEVELS.push( { name:"tuto_rock", locked:getSavedState("tuto_rock"), tuto:Tuto.tutoRock, sheep:2 } );
+			LEVELS.push( { name:"tuto_time", locked:getSavedState("tuto_time"), tuto:Tuto.tutoTime, sheep:2 } );
+			LEVELS.push( { name:"level_diag", locked:getSavedState("level_diag"), tuto:null, sheep:3 } );
+			LEVELS.push( { name:"tuto_hole", locked:getSavedState("tuto_hole"), tuto:Tuto.tutoHole, sheep:2 } );
+			LEVELS.push( { name:"level_minefield", locked:getSavedState("level_minefield"), tuto:null, sheep:5 } );
+			LEVELS.push( { name:"tuto_big", locked:getSavedState("tuto_big"), tuto:Tuto.tutoBigBomb, sheep:5 } );
+			LEVELS.push( { name:"level_big_time", locked:getSavedState("level_big_time"), tuto:null, sheep:3 } );
+			LEVELS.push( { name:"tuto_chain", locked:getSavedState("tuto_chain"), tuto:Tuto.tutoChain, sheep:1 } );
+			LEVELS.push( { name:"level_mayhem", locked:getSavedState("level_mayhem"), tuto:null, sheep:7 } );
+			LEVELS.push( { name:"level_heart", locked:getSavedState("level_heart"), tuto:null, sheep:14 } );
 			//LEVELS.push( { name:"sandbox", locked:false, tuto:null } );
 		}
 		CURRENT_LEVEL = -1;
@@ -89,12 +100,37 @@ class Game extends Sprite
 		addEventListener(Event.ADDED_TO_STAGE, init);
 	}
 	
+	private function getSavedState (_name:String) :Bool {
+		var _SOI:Int = SOIndexOf(_name);
+		if (_SOI != -1) {
+			return SO.data.levels[_SOI].locked;
+		}
+		return true;
+	}
+	
+	static private function SOIndexOf (_name:String) :Int {
+		for (_i in 0...SO.data.levels.length) {
+			if (SO.data.levels[_i].name == _name)
+				return _i;
+		}
+		return -1;
+	}
+	
 	static public function unlockLevel (_index:Int) :Bool {
 		// If invalid index or level already unlocked
 		if (_index < 0 || _index >= LEVELS.length || !LEVELS[_index].locked)
 			return false;
 		// else, success
 		LEVELS[_index].locked = false;
+		//
+		var _SOI:Int = SOIndexOf(LEVELS[_index].name);
+		if (_SOI == -1) {
+			SO.data.levels.push( { name:LEVELS[_index].name, locked:false } );
+		}
+		else {
+			SO.data.levels[_SOI].locked = false;
+		}
+		SO.flush();
 		return true;
 	}
 	

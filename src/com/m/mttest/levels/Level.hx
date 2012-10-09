@@ -387,6 +387,17 @@ class Level extends Entity, implements IAStarClient
 		}
 		// Update
 		super.update();
+		//
+		sheepLayer.children.sort(zSorting);
+		/*for (_s in _sheepArray) {
+			addChild(_s);
+		}*/
+	}
+	
+	private function zSorting (_e1:Entity, _e2:Entity) :Int {
+		if (_e1.y > _e2.y)		return 1;
+		else if (_e1.y < _e2.y)	return -1;
+		else					return 0;
 	}
 	
 	private function blowTileUp (_point:BlowUpInfo) :Void {

@@ -36,7 +36,7 @@ class StartMenu extends Scene
 		var _sheep:DisplaySheep;
 		var _sheepArray:Array<DisplaySheep> = new Array<DisplaySheep>();
 		//for (_i in 0...7) {
-		for (_i in 0...Std.random(11) + 1) {
+		for (_i in 0...countSheep()) {
 			_sheep = new DisplaySheep();
 			_sheep.x = (Game.SIZE.width / Game.SCALE / 2) + Std.random(200) - 100;
 			_sheep.y = 48 + Std.random(10);
@@ -74,6 +74,14 @@ class StartMenu extends Scene
 		credits.x = (Game.SIZE.width / Game.SCALE - credits.width) / 2;
 		credits.y = Game.SIZE.height / Game.SCALE - credits.height - 4;
 		addChild(credits);
+	}
+	
+	private function countSheep () :Int {
+		var _count:Int = 0;
+		for (_i in 1...Game.LEVELS.length) {
+			if (!Game.LEVELS[_i].locked)	_count += Game.LEVELS[_i-1].sheep;
+		}
+		return _count;
 	}
 	
 	private function zSorting (_e1:DisplaySheep, _e2:DisplaySheep) :Int {

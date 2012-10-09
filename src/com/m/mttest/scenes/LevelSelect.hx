@@ -121,7 +121,7 @@ class LevelSlot extends Entity
 	
 }
 
-typedef LevelObject = { name:String, locked:Bool, tuto:Tuto }
+typedef LevelObject = { name:String, locked:Bool, tuto:Tuto, sheep:Int }
 
 
 
