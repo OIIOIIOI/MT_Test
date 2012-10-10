@@ -101,6 +101,7 @@ class Game extends Sprite
 	}
 	
 	private function getSavedState (_name:String) :Bool {
+		//return false;
 		var _SOI:Int = SOIndexOf(_name);
 		if (_SOI != -1) {
 			return SO.data.levels[_SOI].locked;

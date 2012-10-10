@@ -3,6 +3,7 @@ package com.m.mttest;
 import com.m.mttest.anim.FrameManager;
 import com.remixtechnology.SWFProfiler;
 import flash.display.StageAlign;
+import flash.display.StageQuality;
 import flash.display.StageScaleMode;
 import flash.events.Event;
 import flash.Lib;
@@ -29,6 +30,7 @@ class Main
 		// Init
 		Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
 		Lib.current.stage.align = StageAlign.TOP_LEFT;
+		Lib.current.stage.quality = StageQuality.LOW;
 		// Keyboard
 		KeyboardManager.init(Lib.current.stage);
 		// Spritesheets
