@@ -49,7 +49,7 @@ class Game extends Sprite
 	inline static public var SCALE:Int = 3;// Since the display is at pixel-level, specify how much to scale it
 	inline static public var FPS:UInt = 40;// How many times per second do we want the game to update
 	inline static public var MS:Float = 1000 / FPS;
-	inline static public var TILE_SIZE:UInt = 16;// The size of a single tile
+	inline static public var TILE_SIZE:Int = 16;// The size of a single tile
 	
 	static public var SO:SharedObject;
 	static public var LEVELS:Array<LevelObject>;

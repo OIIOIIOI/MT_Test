@@ -19,10 +19,10 @@ using Lambda;
 class Entity
 {
 	
-	public var x (getX, setX):Float;
-	public var y (getY, setY):Float;
-	public var width (getWidth, setWidth):Int;
-	public var height (getHeight, setHeight):Int;
+	public var x:Float;
+	public var y:Float;
+	public var width:Int;
+	public var height:Int;
 	public var rect (getRect, never):Rectangle;
 	public var absRect (getAbsRect, never):Rectangle;
 	public var color:UInt;
@@ -123,38 +123,6 @@ class Entity
 		if (customClickHandler != null)
 			customClickHandler(this);
 		//trace("clicked " + this);
-	}
-	
-	private function getX () :Float {
-		return x;
-	}
-	private function setX (_x:Float) :Float {
-		x = _x;
-		return x;
-	}
-	
-	private function getY () :Float {
-		return y;
-	}
-	private function setY (_y:Float) :Float {
-		y = _y;
-		return y;
-	}
-	
-	private function getWidth () :Int {
-		return width;
-	}
-	private function setWidth (_width:Int) :Int {
-		width = _width;
-		return width;
-	}
-	
-	private function getHeight () :Int {
-		return height;
-	}
-	private function setHeight (_height:Int) :Int {
-		height = _height;
-		return height;
 	}
 	
 	private function getAbsX () :Float {
