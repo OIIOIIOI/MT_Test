@@ -19,15 +19,15 @@ class BitmapText extends Entity
 	static public var PRE_NUMBERS:String = "number_";
 	static public var PRE_SYMBOLS:String = "symbol_";
 	
-	static public var BANK:Hash<String>;
-	static public var ASSOC:Hash<String>;
-	static public var OFFSETS:Hash<Point>;
-	static public var OFFSETS_NEXT:Hash<Point>;
+	static public var BANK:Map<String, String>;
+	static public var ASSOC:Map<String, String>;
+	static public var OFFSETS:Map<String, Point>;
+	static public var OFFSETS_NEXT:Map<String, Point>;
 	
 	private var CHAR_SPACE:Int;
 	private var WORD_SPACE:Int;
 	
-	public var text (default, setText):String;
+	public var text (default, set_text):String;
 	
 	public var spritesheet (default, null):String;
 	
@@ -35,13 +35,13 @@ class BitmapText extends Entity
 		super();
 		
 		if (BANK == null) {
-			BANK = new Hash<String>();
+			BANK = new Map();
 			BANK.set(PRE_LETTERS, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 			BANK.set(PRE_NUMBERS, "0123456789");
 			BANK.set(PRE_SYMBOLS, ".,:;?!'\"/\\*+-=_~%()[]{}#&<>²|@°éèêëàâùûüïôöç");
 		}
 		if (ASSOC == null) {
-			ASSOC = new Hash<String>();
+			ASSOC = new Map();
 			// Accents
 			ASSOC.set("é", "eacute");
 			ASSOC.set("è", "egrave");
@@ -94,7 +94,7 @@ class BitmapText extends Entity
 		text = _text;
 	}
 	
-	private function setText (_text:String) :String {
+	private function set_text (_text:String) :String {
 		text = _text;
 		draw();
 		return _text;
@@ -161,7 +161,7 @@ class BitmapText extends Entity
 		_entity.anims.push(_anim);
 	}
 	
-	override private function setScale (_scale:Int) :Int {
+	override private function set_scale (_scale:Int) :Int {
 		scale = _scale;
 		draw();
 		return scale;
@@ -173,8 +173,8 @@ class BitmapText extends Entity
 			case "font_superscript":
 				CHAR_SPACE = 1;
 				WORD_SPACE = 3;
-				OFFSETS = new Hash<Point>();
-				OFFSETS_NEXT = new Hash<Point>();
+				OFFSETS = new Map<String, Point>();
+				OFFSETS_NEXT = new Map<String, Point>();
 				var _s:String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 				for (_l in _s.split("")) {
 					OFFSETS_NEXT.set("letter_" + _l, new Point(-1));
@@ -185,18 +185,18 @@ class BitmapText extends Entity
 			case "font_m_mini":
 				CHAR_SPACE = 1;
 				WORD_SPACE = 2;
-				OFFSETS = new Hash<Point>();
-				OFFSETS_NEXT = new Hash<Point>();
+				OFFSETS = new Map<String, Point>();
+				OFFSETS_NEXT = new Map<String, Point>();
 			case "font_numbers_red", "font_numbers_blue", "font_numbers_gold":
 				CHAR_SPACE = -1;
 				WORD_SPACE = 3;
-				OFFSETS = new Hash<Point>();
-				OFFSETS_NEXT = new Hash<Point>();
+				OFFSETS = new Map<String, Point>();
+				OFFSETS_NEXT = new Map<String, Point>();
 			default:
 				CHAR_SPACE = 1;
 				WORD_SPACE = 3;
-				OFFSETS = new Hash<Point>();
-				OFFSETS_NEXT = new Hash<Point>();
+				OFFSETS = new Map<String, Point>();
+				OFFSETS_NEXT = new Map<String, Point>();
 		}
 		if (_redraw)	draw();
 	}

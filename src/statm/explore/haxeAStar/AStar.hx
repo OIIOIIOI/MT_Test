@@ -1,6 +1,5 @@
 package statm.explore.haxeAStar;
 
-import flash.utils.TypedDictionary;
 import statm.explore.haxeAStar.heuristics.Diagonal;
 import statm.explore.haxeAStar.heuristics.IHeuristic;
 import statm.explore.haxeAStar.heuristics.Manhattan;
@@ -204,7 +203,7 @@ class AStar
 	}
 	
 	// 实例字典
-	private static var _instances:TypedDictionary<IAStarClient, AStar> = new TypedDictionary<IAStarClient, AStar>();
+	private static var _instances:Map<IAStarClient, AStar> = new Map<IAStarClient, AStar>();
 	
 	static public function getAStarInstance(map:IAStarClient):AStar
 	{

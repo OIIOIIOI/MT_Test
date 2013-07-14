@@ -75,7 +75,7 @@ class EndingScene extends Scene
 	
 	private function entitiesClickHandler (_target:Entity) :Void {
 		switch (_target) {
-			case cast(back, Entity):
+			case back:
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.startMenu } ));
 		}
 	}

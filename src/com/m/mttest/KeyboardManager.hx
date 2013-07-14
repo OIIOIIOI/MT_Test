@@ -18,15 +18,15 @@ class KeyboardManager
 {
 	
 	private static var stage:Stage;
-	private static var keys:Hash<Bool>;
-	private static var callbacks:Hash<CBObject>;
+	private static var keys:Map<String, Bool>;
+	private static var callbacks:Map<String, CBObject>;
 	
 	public function new () { }
 	
 	static public function init (_stage:Stage) :Void {
 		stage = _stage;
-		keys = new Hash<Bool>();
-		callbacks = new Hash<CBObject>();
+		keys = new Map<String, Bool>();
+		callbacks = new Map<String, CBObject>();
 		
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
 		stage.addEventListener(KeyboardEvent.KEY_UP, keyUpHandler);

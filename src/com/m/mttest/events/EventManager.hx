@@ -11,7 +11,7 @@ import flash.events.EventDispatcher;
 class EventManager extends EventDispatcher
 {
 	
-	static public var instance (getInstance, null):EventManager;
+	static public var instance (get_instance, null):EventManager;
 	static private var safe:Bool;
 	
 	public function new () {
@@ -20,7 +20,7 @@ class EventManager extends EventDispatcher
 		else		throw new Error("EventManager already instanciated. Use EventManager.instance instead.");
 	}
 	
-	static private function getInstance () :EventManager {
+	static private function get_instance () :EventManager {
 		if (instance == null) {
 			safe = true;
 			new EventManager();

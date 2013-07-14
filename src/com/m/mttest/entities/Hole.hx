@@ -30,7 +30,7 @@ class Hole extends LevelEntity
 		play(IDLE);
 	}
 	
-	override private function getWalkable () :Bool {
+	override private function get_walkable () :Bool {
 		return (variant == 0);
 	}
 	

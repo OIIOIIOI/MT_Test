@@ -42,7 +42,7 @@ class Play extends Scene
 	private var tutoPopup:TutoPopup;
 	
 	private var endGameTimer:Timer;
-	private var locked (default, setLocked):Bool;
+	private var locked (default, set_locked):Bool;
 	private var timerCallback:Dynamic;
 	
 	public function new (_index:Int) {
@@ -53,17 +53,17 @@ class Play extends Scene
 		pauseButton = new Button(22, ButtonType.pause);
 		pauseButton.x = 3;
 		pauseButton.y = Game.SIZE.height / Game.SCALE - pauseButton.height - 3;
-		pauseButton.customClickHandler = entitiesClickHandler;
+		pauseButton.customClickHandler = pauseClickHandler;
 		// Start/stop
 		playButton = new Button(24, ButtonType.startStop);
 		playButton.x = Game.SIZE.width / Game.SCALE - playButton.width - 2;
 		playButton.y = Game.SIZE.height / Game.SCALE - playButton.height - 2;
-		playButton.customClickHandler = entitiesClickHandler;
+		playButton.customClickHandler = playClickHandler;
 		// Reset
 		resetButton = new Button(18, ButtonType.reset);
 		resetButton.x = playButton.x - resetButton.width - 2;
 		resetButton.y = playButton.y + (playButton.height - resetButton.height) / 2;
-		resetButton.customClickHandler = entitiesClickHandler;
+		resetButton.customClickHandler = resetClickHandler;
 		// Shine FX
 		shineFX = new ShineFX();
 		shineFX.mouseEnabled = false;
@@ -77,7 +77,7 @@ class Play extends Scene
 		init(Game.LEVELS[Game.CURRENT_LEVEL].name);
 	}
 	
-	private function setLocked (_locked:Bool) :Bool {
+	private function set_locked (_locked:Bool) :Bool {
 		locked = _locked;
 		if (_locked) {
 			pauseButton.mouseEnabled = playButton.mouseEnabled = resetButton.mouseEnabled = false;
@@ -169,39 +169,40 @@ class Play extends Scene
 		}
 	}
 	
-	private function entitiesClickHandler (_target:Entity) :Void {
+	private function pauseClickHandler (e:Entity) {
 		if (locked)	return;// Just for safety
-		switch (_target) {
-			case cast(pauseButton, Entity):
-				pauseGame(!level.paused);
-			case cast(playButton, Entity):
-				if (!level.active) {
-					// Remove FX
-					removeChild(shineFX);
-					playButton.removeFX();
-					//
-					inventory.locked = true;
-					level.activate();
-					endGameTimer = Timer.delay(callback(checkEndGame), 1500);
-				}
-				else {
-					// Add FX
-					if (inventory.getSelected() == null) {
-						addChild(shineFX);
-						playButton.addFX(new ColorBlinkFX(-1, new ColorTransform(1, 1, 1, 1, 32, 32, 32), null, 4));
-					}
-					//
-					inventory.locked = false;
-					if (endGameTimer != null)	endGameTimer.stop();
-					level.reset();
-				}
-			case cast(resetButton, Entity):
-				// Remove FX
-				removeChild(shineFX);
-				playButton.removeFX();
-				//
-				resetLevel();
+		pauseGame(!level.paused);
+	}
+	private function playClickHandler (e:Entity) {
+		if (locked)	return;// Just for safety
+		if (!level.active) {
+			// Remove FX
+			removeChild(shineFX);
+			playButton.removeFX();
+			//
+			inventory.locked = true;
+			level.activate();
+			endGameTimer = Timer.delay(checkEndGame.bind(), 1500);
 		}
+		else {
+			// Add FX
+			if (inventory.getSelected() == null) {
+				addChild(shineFX);
+				playButton.addFX(new ColorBlinkFX(-1, new ColorTransform(1, 1, 1, 1, 32, 32, 32), null, 4));
+			}
+			//
+			inventory.locked = false;
+			if (endGameTimer != null)	endGameTimer.stop();
+			level.reset();
+		}
+	}
+	private function resetClickHandler (e:Entity) {
+		if (locked)	return;// Just for safety
+		// Remove FX
+		removeChild(shineFX);
+		playButton.removeFX();
+		//
+		resetLevel();
 	}
 	
 	private function resetLevel (_force:Bool = false) :Void {
@@ -301,7 +302,7 @@ class Play extends Scene
 			endGame(_victory, _reason);
 		}
 		else {
-			endGameTimer = Timer.delay(callback(checkEndGame), 1500);
+			endGameTimer = Timer.delay(checkEndGame.bind(), 1500);
 		}
 	}
 	

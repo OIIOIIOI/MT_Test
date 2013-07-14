@@ -72,7 +72,7 @@ class LevelSelect extends Scene
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.play, param:cast(_target, LevelSlot).index } ));
 		}
 		else switch (_target) {
-			case cast(back, Entity):
+			case back:
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.startMenu } ));
 			//case cast(sound, Entity): trace("MUTE");
 		}

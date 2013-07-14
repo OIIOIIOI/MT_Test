@@ -92,7 +92,7 @@ class StartMenu extends Scene
 	
 	private function entitiesClickHandler (_target:Entity) :Void {
 		switch (_target) {
-			case cast(levelSelect, Entity):
+			case levelSelect:
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.levelSelect } ));
 			//case cast(sound, Entity): trace("MUTE");
 		}

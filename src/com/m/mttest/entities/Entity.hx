@@ -23,38 +23,38 @@ class Entity
 	public var y:Float;
 	public var width:Int;
 	public var height:Int;
-	public var rect (getRect, never):Rectangle;
-	public var absRect (getAbsRect, never):Rectangle;
+	public var rect (get_rect, never):Rectangle;
+	public var absRect (get_absRect, never):Rectangle;
 	public var color:UInt;
-	public var scale (default, setScale):Int;
+	public var scale (default, set_scale):Int;
 	
 	public var dead:Bool;
 	
 	public var parent (default, null) :Entity;
 	public var children (default, null) :Array<Entity>;
-	public var numChildren (getNumChildren, never) :Int;
-	public var absX (getAbsX, never):Float;
-	public var absY (getAbsY, never):Float;
-	public var absScale (getAbsScale, never):Int;
+	public var numChildren (get_numChildren, never) :Int;
+	public var absX (get_absX, never):Float;
+	public var absY (get_absY, never):Float;
+	public var absScale (get_absScale, never):Int;
 	
 	public var mouseEnabled:Bool;
 	public var customClickHandler:Entity->Void;
 	
 	public var anims (default, null):Array<Animation>;
 	public var currentAnim (default, null):Int;
-	public var currentAnimName (getCurrentAnimName, never):String;
-	public var currentFrameName (getCurrentFrameName, never):String;
+	public var currentAnimName (get_currentAnimName, never):String;
+	public var currentFrameName (get_currentFrameName, never):String;
 	public var currentFrame (default, null):Int;
 	public var paused:Bool;
 	private var lastDraw:Float;
-	public var bitmapData (getBitmapData, null):BitmapData;
-	public var frameOffset (getFrameOffset, null):Point;
+	public var bitmapData (get_bitmapData, null):BitmapData;
+	public var frameOffset (get_frameOffset, null):Point;
 	public var hitBox:Rectangle;
-	public var absHitBox (getAbsHitBox, never):Rectangle;
+	public var absHitBox (get_absHitBox, never):Rectangle;
 	public var drawHitBox:Bool;
 	
 	public var effects (default, null):Array<FX>;
-	public var alpha (default, setAlpha):Float;
+	public var alpha (default, set_alpha):Float;
 	public var blendMode:BlendMode;
 	public var mask:Rectangle = null;
 	
@@ -101,7 +101,7 @@ class Entity
 		//children.splice(_index, 1);
 	}
 	
-	private function getNumChildren () :Int {
+	private function get_numChildren () :Int {
 		if (children == null)	return 0;
 		else					return children.length;
 	}
@@ -125,7 +125,7 @@ class Entity
 		//trace("clicked " + this);
 	}
 	
-	private function getAbsX () :Float {
+	private function get_absX () :Float {
 		var _v:Float = x;
 		var _e:Entity = this;
 		while (_e.parent != null) {
@@ -134,7 +134,7 @@ class Entity
 		}
 		return _v;
 	}
-	private function getAbsY () :Float {
+	private function get_absY () :Float {
 		var _v:Float = y;
 		var _e:Entity = this;
 		while (_e.parent != null) {
@@ -144,7 +144,7 @@ class Entity
 		return _v;
 	}
 	
-	private function getAbsScale () :Int {
+	private function get_absScale () :Int {
 		var _v:Int = scale;
 		var _e:Entity = this;
 		while (_e.parent != null) {
@@ -154,15 +154,15 @@ class Entity
 		return _v;
 	}
 	
-	private function getRect () :Rectangle {
+	private function get_rect () :Rectangle {
 		return new Rectangle(x, y, width, height);
 	}
 	
-	private function getAbsRect () :Rectangle {
+	private function get_absRect () :Rectangle {
 		return new Rectangle(absX, absY, width, height);
 	}
 	
-	private function getAbsHitBox () :Rectangle {
+	private function get_absHitBox () :Rectangle {
 		var _rect:Rectangle = absRect.clone();
 		if (hitBox != null) {
 			_rect.x += hitBox.x;
@@ -173,7 +173,7 @@ class Entity
 		return _rect;
 	}
 	
-	private function setAlpha (_alpha:Float) :Float {
+	private function set_alpha (_alpha:Float) :Float {
 		alpha = _alpha;
 		// Children
 		if (children != null) {
@@ -306,7 +306,7 @@ class Entity
 		}
 	}
 	
-	private function getFrameData () :BitmapData {
+	private function get_frameData () :BitmapData {
 		var _data:BitmapData = null;
 		if (anims != null && currentAnim != -1) {
 			var _animFrame:AnimFrame = anims[currentAnim].frames[currentFrame];
@@ -315,12 +315,12 @@ class Entity
 		return _data;
 	}
 	
-	private function getBitmapData () :BitmapData {
+	private function get_bitmapData () :BitmapData {
 		if (bitmapData != null) {
 			bitmapData.dispose();
 			bitmapData = null;
 		}
-		bitmapData = getFrameData();
+		bitmapData = get_frameData();
 		if (bitmapData == null) {
 			if (width < 1)	width = 10;
 			if (height < 1)	height = 10;
@@ -346,24 +346,24 @@ class Entity
 		return bitmapData;
 	}
 	
-	private function getFrameOffset () :Point {
+	private function get_frameOffset () :Point {
 		if (anims != null && currentAnim != -1) {
 			return new Point(anims[currentAnim].frames[currentFrame].x, anims[currentAnim].frames[currentFrame].y);
 		}
 		else return new Point();
 	}
 	
-	private function setScale (_scale:Int) :Int {
+	private function set_scale (_scale:Int) :Int {
 		scale = _scale;
 		return scale;
 	}
 	
-	private function getCurrentAnimName () :String {
+	private function get_currentAnimName () :String {
 		if (anims == null || anims[currentAnim] == null) return null;
 		return anims[currentAnim].name;
 	}
 	
-	private function getCurrentFrameName () :String {
+	private function get_currentFrameName () :String {
 		if (anims == null) return null;
 		return anims[currentAnim].frames[currentFrame].name;
 	}

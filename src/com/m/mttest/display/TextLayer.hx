@@ -11,7 +11,7 @@ import flash.errors.Error;
 class TextLayer extends Entity
 {
 	
-	static public var instance (getInstance, null):TextLayer;
+	static public var instance (get_instance, null):TextLayer;
 	static private var safe:Bool;
 	
 	public function new () {
@@ -20,7 +20,7 @@ class TextLayer extends Entity
 		else		throw new Error("TextLayer already instanciated. Use TextLayer.instance instead.");
 	}
 	
-	static private function getInstance () :TextLayer {
+	static private function get_instance () :TextLayer {
 		if (instance == null) {
 			safe = true;
 			new TextLayer();

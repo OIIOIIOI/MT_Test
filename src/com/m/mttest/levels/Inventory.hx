@@ -20,7 +20,7 @@ import flash.errors.Error;
 class Inventory extends Entity
 {
 	
-	public var locked (default, setLocked):Bool;
+	public var locked (default, set_locked):Bool;
 	
 	private var invData:BitmapData;
 	private var list:Array<InvObject>;
@@ -179,7 +179,7 @@ class Inventory extends Entity
 		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.SET_HINT, LevelEntity.typeToDesc(list[_target.listIndex].type)));
 	}
 	
-	public function setLocked (_locked:Bool) :Bool {
+	public function set_locked (_locked:Bool) :Bool {
 		locked = _locked;
 		var _slot:InvSlot;
 		if (_locked) {

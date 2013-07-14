@@ -45,7 +45,7 @@ using Lambda;
 class Game extends Sprite
 {
 	
-	inline static public var SIZE:Rectangle = new Rectangle(0, 0, 798, 480);// Since the display is at pixel-level, specify how much to scale it
+	static public var SIZE:Rectangle = new Rectangle(0, 0, 798, 480);// Since the display is at pixel-level, specify how much to scale it
 	inline static public var SCALE:Int = 3;// Since the display is at pixel-level, specify how much to scale it
 	inline static public var FPS:UInt = 40;// How many times per second do we want the game to update
 	inline static public var MS:Float = 1000 / FPS;

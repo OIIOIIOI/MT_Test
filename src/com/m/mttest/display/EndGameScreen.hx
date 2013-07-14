@@ -57,13 +57,13 @@ class EndGameScreen extends Entity
 		}
 		// Exit to menu
 		back = new Button(18, ButtonType.levelSelect);
-		back.customClickHandler = entitiesClickHandler;
+		back.customClickHandler = backClickHandler;
 		addChild(back);
 		// Replay
 		if (_victory)	replay = new Button(18, ButtonType.reset);
 		else			replay = new Button(24, ButtonType.reset);
 		replay.icon.play("on");
-		replay.customClickHandler = entitiesClickHandler;
+		replay.customClickHandler = replayClickHandler;
 		addChild(replay);
 		// Next (display if next level is unlocked or this was the last level
 		if ((Game.CURRENT_LEVEL + 1 < Game.LEVELS.length && !Game.LEVELS[Game.CURRENT_LEVEL + 1].locked)
@@ -72,7 +72,7 @@ class EndGameScreen extends Entity
 			// Big if victory
 			if (_victory)	next = new Button(24, ButtonType.next);
 			else			next = new Button(18, ButtonType.next);
-			next.customClickHandler = entitiesClickHandler;
+			next.customClickHandler = nextClickHandler;
 			addChild(next);
 		}
 		// Place buttons
@@ -98,18 +98,17 @@ class EndGameScreen extends Entity
 		}
 	}
 	
-	private function entitiesClickHandler (_target:Entity) :Void {
-		switch (_target) {
-			case cast(replay, Entity):
-				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.RESET_LEVEL));
-			case cast(back, Entity):
-				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.levelSelect } ));
-			case cast(next, Entity):
-				if (Game.CURRENT_LEVEL + 1 >= Game.LEVELS.length)
-					EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.ending} ));
-				else
-					EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.play, param:Game.CURRENT_LEVEL + 1 } ));
-		}
+	private function replayClickHandler (e:Entity) {
+		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.RESET_LEVEL));
+	}
+	private function backClickHandler (e:Entity) {
+		EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.levelSelect } ));
+	}
+	private function nextClickHandler (e:Entity) {
+		if (Game.CURRENT_LEVEL + 1 >= Game.LEVELS.length)
+			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.ending} ));
+		else
+			EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.play, param:Game.CURRENT_LEVEL + 1 } ));
 	}
 	
 	override public function destroy () :Void {

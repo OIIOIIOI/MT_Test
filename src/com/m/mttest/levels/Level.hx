@@ -29,7 +29,7 @@ import statm.explore.haxeAStar.IntPoint;
  */
 
 using Lambda;
-class Level extends Entity, implements IAStarClient
+class Level extends Entity implements IAStarClient
 {
 	// Bitmap data
 	private var levelData:BitmapData;
@@ -47,7 +47,7 @@ class Level extends Entity, implements IAStarClient
 	public var exitPos (default, null):IntPoint;
 	public var absoluteSearch:Bool;
 	//
-	private var blasts:Hash<String>;
+	private var blasts:Map<String, String>;
 	private var blownUpTiles:Array<BlowUpInfo>;
 	public var endGameEntities (default, null):Array<LevelEntity>;
 	public var active (default, null):Bool;
@@ -70,7 +70,7 @@ class Level extends Entity, implements IAStarClient
 		addChild(sheepLayer);
 		addChild(emitter);
 		//
-		blasts = new Hash<String>();
+		blasts = new Map();
 		blownUpTiles = new Array<BlowUpInfo>();
 		endGameEntities = new Array<LevelEntity>();
 		active = false;
@@ -162,7 +162,7 @@ class Level extends Entity, implements IAStarClient
 			collisionLayer.getChildAt(0).destroy();
 			collisionLayer.removeChildAt(0);
 		}
-		blasts = new Hash<String>();
+		blasts = new Map();
 		blownUpTiles = new Array<BlowUpInfo>();
 		endGameEntities = new Array<LevelEntity>();
 		// Parse data
@@ -191,7 +191,11 @@ class Level extends Entity, implements IAStarClient
 				//
 				if (_floorType != null) {
 					_class = LevelEntity.typeToClass(_floorType);
-					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_floorType, _variant));
+					_params = new Array<Dynamic>();
+					_params.push(_x);
+					_params.push(_y);
+					_params.push(this);
+					_params = _params.concat(LevelEntity.getConstructorParams(_floorType, _variant));
 					//trace("FLOOR create " + _class + " / " + _params);
 					_entity = Type.createInstance(Type.resolveClass(_class), _params);
 					addEntity(_entity);
@@ -204,7 +208,11 @@ class Level extends Entity, implements IAStarClient
 				//
 				if (_itemType != null && _itemType != _floorType) {
 					_class = LevelEntity.typeToClass(_itemType);
-					_params = [_x, _y, this].concat(LevelEntity.getConstructorParams(_itemType, _variant));
+					_params = new Array<Dynamic>();
+					_params.push(_x);
+					_params.push(_y);
+					_params.push(this);
+					_params = _params.concat(LevelEntity.getConstructorParams(_itemType, _variant));
 					//trace("ITEM create " + _class + " / " + _params);
 					_entity = Type.createInstance(Type.resolveClass(_class), _params);
 					_entity.userPlaced = (_bitmapData == userData);
@@ -293,7 +301,11 @@ class Level extends Entity, implements IAStarClient
 	
 	public function placeItem (_invObject:InvObject, _point:IntPoint) :Void {
 		var _class:String = LevelEntity.typeToClass(_invObject.type);
-		var _params:Array<Dynamic> = [_point.x, _point.y, this].concat(LevelEntity.getConstructorParams(_invObject.type, _invObject.variant));
+		var _params:Array<Dynamic> = new Array<Dynamic>();
+		_params.push(_point.x);
+		_params.push(_point.y);
+		_params.push(this);
+		_params = _params.concat(LevelEntity.getConstructorParams(_invObject.type, _invObject.variant));
 		var _entity:LevelEntity = Type.createInstance(Type.resolveClass(_class), _params);
 		_entity.userPlaced = true;
 		addEntity(_entity);
@@ -513,7 +525,7 @@ class Level extends Entity, implements IAStarClient
 			addEntity(_entity);
 			_entity.activate();
 		}
-		blasts = new Hash<String>();
+		blasts = new Map();
 	}
 	
 }

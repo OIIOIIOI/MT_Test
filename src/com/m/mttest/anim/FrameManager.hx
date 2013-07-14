@@ -14,7 +14,7 @@ import haxe.Json;
 class FrameManager
 {
 	
-	static private var pairs:Hash<FramePair>;
+	static private var pairs:Map<String, FramePair>;
 	
 	static public function store (_id:String, _sheet:BitmapData, _jsonString:String) :Void {
 		var _data:Dynamic = Json.parse(_jsonString);
@@ -31,7 +31,7 @@ class FrameManager
 		
 		var _pair:FramePair = { sheet:_sheet, frames:_frames };
 		if (pairs == null) {
-			pairs = new Hash<FramePair>();
+			pairs = new Map<String, FramePair>();
 		}
 		pairs.set(_id, _pair);
 	}

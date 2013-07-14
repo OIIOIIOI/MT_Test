@@ -24,9 +24,9 @@ class LevelEntity extends Entity
 	private var level:Level;
 	
 	public var active:Bool;
-	public var walkable (getWalkable, never):Bool;
-	public var destructible (getDestructible, never):Bool;
-	public var variant (getVariant, null):Int;
+	public var walkable (get_walkable, never):Bool;
+	public var destructible (get_destructible, never):Bool;
+	public var variant (get_variant, null):Int;
 	public var userPlaced:Bool;
 	
 	public function new (_x:Int = 0, _y:Int = 0, _level:Level, ?_type:LEType = null) {
@@ -45,7 +45,7 @@ class LevelEntity extends Entity
 		active = false;
 	}
 	
-	private function getVariant () :Int {
+	private function get_variant () :Int {
 		return variant;
 	}
 	
@@ -62,7 +62,7 @@ class LevelEntity extends Entity
 		level.updateMap();
 	}
 	
-	private function getWalkable () :Bool {
+	private function get_walkable () :Bool {
 		return switch (type) {
 			case unbreakable_wall, border, blocked: false;
 			case floor, sheep, exit, blast, hole: true;
@@ -82,7 +82,7 @@ class LevelEntity extends Entity
 		}
 	}
 	
-	private function getDestructible () :Bool {
+	private function get_destructible () :Bool {
 		return switch (type) {
 			case unbreakable_wall, hole, floor, exit, blast, blocked, border: false;
 			case bomb, sheep: true;

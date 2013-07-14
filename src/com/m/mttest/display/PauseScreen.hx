@@ -69,7 +69,7 @@ class PauseScreen extends Entity
 	
 	private function entitiesClickHandler (_target:Entity) :Void {
 		switch (_target) {
-			case cast(back, Entity):
+			case back:
 				EventManager.instance.dispatchEvent(new GameEvent(GameEvent.CHANGE_SCENE, { scene:GameScene.levelSelect } ));
 			//case cast(sound, Entity): trace("MUTE");
 		}

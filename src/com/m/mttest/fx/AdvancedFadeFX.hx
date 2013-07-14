@@ -11,7 +11,7 @@ class AdvancedFadeFX extends FX
 {
 	
 	private var values:Array<ColorTransform>;
-	public var transform (getTransform, null):ColorTransform;
+	public var transform (get_transform, null):ColorTransform;
 	
 	public function new (_duration:Int, _values:Array<ColorTransform>, ?_callback:Dynamic, ?_fps:Int = 40)
 	{
@@ -20,7 +20,7 @@ class AdvancedFadeFX extends FX
 		values = _values;
 	}
 	
-	private function getTransform () :ColorTransform
+	private function get_transform () :ColorTransform
 	{
 		var _transform:ColorTransform = new ColorTransform();
 		_transform.redMultiplier = values[0].redMultiplier - (values[0].redMultiplier - values[1].redMultiplier) * elapsed / duration;
